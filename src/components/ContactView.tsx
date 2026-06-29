@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect, FormEvent } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle, Shield, Sparkles } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle, Shield, Sparkles, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ContactViewProps {
@@ -19,6 +19,8 @@ export default function ContactView({ lang }: ContactViewProps) {
   const [message, setMessage] = useState('');
   const [captchaAnswer, setCaptchaAnswer] = useState('');
   const [captchaChallenge, setCaptchaChallenge] = useState({ num1: 0, num2: 0, sum: 0 });
+  const [contactMethod, setContactMethod] = useState<'form' | 'whatsapp' | 'email'>('form');
+  const [successMethod, setSuccessMethod] = useState<'form' | 'whatsapp' | 'email'>('form');
   
   // Feedback states
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -59,11 +61,26 @@ export default function ContactView({ lang }: ContactViewProps) {
     if (!validate()) return;
 
     setIsSubmitting(true);
+    setSuccessMethod(contactMethod);
     
+    // Construct pre-filled template message
+    const textTemplate = lang === 'ne' 
+      ? `नमस्ते हरेन्द्र जी,\n\nम तपाईंसँग परामर्श गर्न चाहन्छु:\nविषय: ${subject}\n\nमेरो विवरण:\n- नाम: ${name}\n- इमेल: ${email}\n\nसन्देश:\n${message}`
+      : `Hello Harendra,\n\nI'd like to consult with you:\nSubject: ${subject}\n\nMy Details:\n- Name: ${name}\n- Email: ${email}\n\nMessage:\n${message}`;
+
     // Simulate API Post roundtrip
     setTimeout(() => {
       setIsSubmitting(false);
       setIsSuccess(true);
+
+      if (contactMethod === 'whatsapp') {
+        const waUrl = `https://wa.me/9779823587535?text=${encodeURIComponent(textTemplate)}`;
+        window.open(waUrl, '_blank');
+      } else if (contactMethod === 'email') {
+        const mailUrl = `mailto:harendralamsal4140@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(textTemplate)}`;
+        window.location.href = mailUrl;
+      }
+
       // Reset form fields
       setName('');
       setEmail('');
@@ -105,6 +122,18 @@ export default function ContactView({ lang }: ContactViewProps) {
                   <span className="text-xs text-slate-500 font-mono">EMAIL DIRECTORY</span>
                   <a href="mailto:harendralamsal4140@gmail.com" className="block text-sm font-semibold text-white hover:text-indigo-400">
                     harendralamsal4140@gmail.com
+                  </a>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4 p-4 rounded-lg bg-slate-900/40 border border-slate-850">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/10 text-emerald-400">
+                  <MessageCircle size={18} />
+                </div>
+                <div>
+                  <span className="text-xs text-slate-500 font-mono">WHATSAPP DIRECT</span>
+                  <a href="https://wa.me/9779823587535" target="_blank" rel="noopener noreferrer" className="block text-sm font-semibold text-white hover:text-emerald-400">
+                    +977 9823587535
                   </a>
                 </div>
               </div>
@@ -174,11 +203,27 @@ export default function ContactView({ lang }: ContactViewProps) {
                   className="absolute inset-0 bg-slate-950/95 z-20 rounded-xl flex flex-col items-center justify-center p-8 text-center"
                 >
                   <CheckCircle size={48} className="text-emerald-400 mb-4 animate-bounce" />
-                  <h3 className="text-xl font-bold text-white mb-2">Message Received Successfully!</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {successMethod === 'whatsapp' 
+                      ? (lang === 'ne' ? 'व्हाट्सएप सुरु गरियो!' : 'WhatsApp Chat Launched!')
+                      : successMethod === 'email' 
+                      ? (lang === 'ne' ? 'इमेल क्लाइन्ट सुरु गरियो!' : 'Email Client Launched!')
+                      : (lang === 'ne' ? 'सन्देश सफलतापूर्वक पठाइयो!' : 'Message Sent Successfully!')}
+                  </h3>
                   <p className="text-sm text-slate-400 max-w-sm mb-6">
-                    {lang === 'ne' 
-                      ? 'धन्यवाद ! तपाईंको परामर्श सन्देश हरेन्द्रको इनबक्समा सुरक्षित रूपमा पठाइएको छ। उहाँले छिट्टै इमेल मार्फत सम्पर्क गर्नुहुनेछ।' 
-                      : 'Thank you! Your message has been sent successfully to Harendra Lamsal inbox. A response will be provided to your email address shortly.'}
+                    {successMethod === 'whatsapp' ? (
+                      lang === 'ne'
+                        ? 'तपाईंको सन्देश व्हाट्सएपमा तयार गरिएको छ। कृपया च्याट विन्डोमा सन्देश पठाउनुहोस्!'
+                        : 'Your message has been formatted and WhatsApp chat has been opened. Please hit send in the WhatsApp app!'
+                    ) : successMethod === 'email' ? (
+                      lang === 'ne'
+                        ? 'तपाईंको इमेल ड्राफ्ट तयार गरिएको छ। कृपया पठाउनुहोस् क्लिक गर्नुहोस्!'
+                        : 'Your email client has been launched with the pre-filled proposal. Please hit send in your email client!'
+                    ) : (
+                      lang === 'ne' 
+                        ? 'धन्यवाद ! तपाईंको परामर्श सन्देश हरेन्द्रको इनबक्समा सुरक्षित रूपमा पठाइएको छ। उहाँले छिट्टै इमेल मार्फत सम्पर्क गर्नुहुनेछ।' 
+                        : 'Thank you! Your message has been sent successfully to Harendra Lamsal\'s inbox. A response will be provided shortly.'
+                    )}
                   </p>
                   <button
                     type="button"
@@ -190,6 +235,58 @@ export default function ContactView({ lang }: ContactViewProps) {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Preferred Channel Selection */}
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-slate-300 font-mono uppercase tracking-wider block">
+                {lang === 'ne' ? 'मनपर्ने परामर्श माध्यम रोज्नुहोस्' : 'Preferred Consulting Channel'}
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {/* Web Form Option */}
+                <button
+                  type="button"
+                  onClick={() => setContactMethod('form')}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-lg border text-center transition-all cursor-pointer ${
+                    contactMethod === 'form'
+                      ? 'border-indigo-500 bg-indigo-600/10 text-white'
+                      : 'border-slate-800 bg-slate-900/40 hover:border-slate-800 hover:bg-slate-900/60 text-slate-400'
+                  }`}
+                >
+                  <Send size={18} className={contactMethod === 'form' ? 'text-indigo-400 mb-1.5' : 'mb-1.5'} />
+                  <span className="text-[11px] font-bold">
+                    {lang === 'ne' ? 'अनलाइन फारम' : 'Web Form'}
+                  </span>
+                </button>
+
+                {/* WhatsApp Option */}
+                <button
+                  type="button"
+                  onClick={() => setContactMethod('whatsapp')}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-lg border text-center transition-all cursor-pointer ${
+                    contactMethod === 'whatsapp'
+                      ? 'border-emerald-500 bg-emerald-600/10 text-white'
+                      : 'border-slate-800 bg-slate-900/40 hover:border-slate-800 hover:bg-slate-900/60 text-slate-400'
+                  }`}
+                >
+                  <MessageCircle size={18} className={contactMethod === 'whatsapp' ? 'text-emerald-400 mb-1.5' : 'mb-1.5'} />
+                  <span className="text-[11px] font-bold">WhatsApp</span>
+                </button>
+
+                {/* Email Option */}
+                <button
+                  type="button"
+                  onClick={() => setContactMethod('email')}
+                  className={`flex flex-col items-center justify-center p-3.5 rounded-lg border text-center transition-all cursor-pointer ${
+                    contactMethod === 'email'
+                      ? 'border-sky-500 bg-sky-600/10 text-white'
+                      : 'border-slate-800 bg-slate-900/40 hover:border-slate-800 hover:bg-slate-900/60 text-slate-400'
+                  }`}
+                >
+                  <Mail size={18} className={contactMethod === 'email' ? 'text-sky-400 mb-1.5' : 'mb-1.5'} />
+                  <span className="text-[11px] font-bold">Email Direct</span>
+                </button>
+              </div>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Name */}
@@ -279,10 +376,30 @@ export default function ContactView({ lang }: ContactViewProps) {
               type="submit"
               disabled={isSubmitting}
               id="contact-submit-btn"
-              className="w-full inline-flex items-center justify-center space-x-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 px-6 py-4 text-sm font-bold text-white shadow transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full inline-flex items-center justify-center space-x-2 rounded-lg px-6 py-4 text-sm font-bold text-white shadow transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                contactMethod === 'whatsapp'
+                  ? 'bg-emerald-600 hover:bg-emerald-500 hover:scale-[1.01]'
+                  : contactMethod === 'email'
+                  ? 'bg-sky-600 hover:bg-sky-500 hover:scale-[1.01]'
+                  : 'bg-indigo-600 hover:bg-indigo-500 hover:scale-[1.01]'
+              }`}
             >
-              <span>{isSubmitting ? 'Dispatching Message...' : 'Submit Proposal'}</span>
-              <Send size={16} />
+              <span>
+                {isSubmitting
+                  ? (lang === 'ne' ? 'प्रक्रिया चल्दैछ...' : 'Dispatching Message...')
+                  : contactMethod === 'whatsapp'
+                  ? (lang === 'ne' ? 'व्हाट्सएप मार्फत सिधै पठाउनुहोस्' : 'Send via WhatsApp Direct')
+                  : contactMethod === 'email'
+                  ? (lang === 'ne' ? 'इमेल मार्फत सिधै पठाउनुहोस्' : 'Send via Email Direct')
+                  : (lang === 'ne' ? 'प्रस्ताव पेश गर्नुहोस्' : 'Submit Proposal')}
+              </span>
+              {contactMethod === 'whatsapp' ? (
+                <MessageCircle size={16} />
+              ) : contactMethod === 'email' ? (
+                <Mail size={16} />
+              ) : (
+                <Send size={16} />
+              )}
             </button>
           </form>
         </div>
