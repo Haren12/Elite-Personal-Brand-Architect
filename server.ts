@@ -141,6 +141,232 @@ async function startServer() {
     }
   });
 
+  // ==================== API ROUTE: GEMINI ENTERPRISE TECH BLOG WRITER ====================
+  app.post('/api/gemini/write-article', async (req, res) => {
+    try {
+      const {
+        topic,
+        mode = 'standard',
+        lang = 'en',
+        additionalInstructions = '',
+        model = 'gemini-3.5-flash',
+        difficulty = 'Intermediate',
+        targetAudience = 'Developers & Architects',
+        tone = 'Professional & Direct',
+        wordCount = 'Medium (~1500 words)'
+      } = req.body;
+
+      if (!topic) {
+        return res.status(400).json({ error: 'Topic is required to generate an article.' });
+      }
+
+      const client = getAiClient();
+
+      // Adjust model selection safely. Use the model requested by user or fallback.
+      const selectedModel = model === 'gemini-3.1-pro-preview' ? 'gemini-3.1-pro-preview' : 'gemini-3.5-flash';
+
+      const prompt = `You are an elite enterprise editorial and software engineering team consisting of:
+- Senior Technology Journalist
+- Technical Content Writer
+- Senior Software Engineer
+- AI Research Analyst
+- SEO Specialist
+- Content Strategist
+- Fact Checker
+- Technical Editor
+- UX Writer
+- Digital Marketing Expert
+
+Your task is to write a comprehensive, high-quality, technically flawless, original, and deeply helpful article on: "${topic}".
+
+--- Article Requirements ---
+1. MODE: ${mode}
+   - If "news": Summarize the latest announcement, explain why it matters, discuss real-world impact, list pros and cons, compare with competitors, and predict future implications.
+   - If "tutorial": Make it beginner friendly, step-by-step, include realistic and correct modern code examples, provide a troubleshooting section, and detailed FAQs.
+   - If "comparison": Provide a comparison table structure, analyze pros, cons, pricing, performance, security, ease of use, best use cases, and make a definitive recommendation.
+   - If "standard" / "strategic": Provide a high-impact guide/case study with problem statement, background, best practices, performance and security considerations, and conclusions.
+
+2. LANGUAGE & LOCALIZATION: ${lang}
+   - If "en" (English): Complete the "contentEn" field in professional English. Leave "contentNp" empty or brief.
+   - If "ne" (Nepali): Complete the "contentNp" field in natural, professionally localized Nepali. Leave "contentEn" empty or brief.
+   - If "bilingual" (Bilingual): Generate both "contentEn" in professional English AND "contentNp" as a complete, perfectly localized Nepali version.
+
+3. STRUCTURE & EXCLUSIONS:
+   - Include clear headings (## and ###).
+   - Never use generic AI filler words or repetitive boilerplate.
+   - Write like a real, top-tier human technical author. Explain complex systems using architectural honesty.
+   - Provide concrete code examples when relevant (use modern, correct TypeScript/React/Node.js syntax).
+   - Highlight Performance and Security considerations explicitly.
+   - Suggest descriptive alt text, meta descriptions, focus keywords, secondary/LSI keywords, internal linking structures, and related articles.
+
+4. PARAMETERS:
+   - Target Audience: ${targetAudience}
+   - Tone: ${tone}
+   - Difficulty Level: ${difficulty}
+   - Word Count Range: ${wordCount}
+   - Additional custom constraints: ${additionalInstructions}`;
+
+      const response = await client.models.generateContent({
+        model: selectedModel,
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              title: {
+                type: Type.STRING,
+                description: 'A compelling, high-CTR, SEO-optimized title.'
+              },
+              slug: {
+                type: Type.STRING,
+                description: 'A URL-safe slug corresponding to the title.'
+              },
+              excerpt: {
+                type: Type.STRING,
+                description: 'An engaging, rich, short teaser summary of the post (max 160 chars).'
+              },
+              category: {
+                type: Type.STRING,
+                description: 'The most relevant technology category (e.g., Artificial Intelligence, Programming, SEO, WordPress, Web Development).'
+              },
+              tags: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'A list of 3-5 relevant lowercase search tags.'
+              },
+              featuredImagePrompt: {
+                type: Type.STRING,
+                description: 'A detailed descriptive prompt for an AI image generator to produce a stunning featured image.'
+              },
+              metaTitle: {
+                type: Type.STRING,
+                description: 'The SEO Meta Title (max 60 chars).'
+              },
+              metaDescription: {
+                type: Type.STRING,
+                description: 'The SEO Meta Description (max 155 chars).'
+              },
+              canonicalSlug: {
+                type: Type.STRING,
+                description: 'A clean canonical slug.'
+              },
+              focusKeyword: {
+                type: Type.STRING,
+                description: 'The primary target search keyword.'
+              },
+              secondaryKeywords: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'List of secondary search keywords.'
+              },
+              lsiKeywords: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'List of Latent Semantic Indexing (LSI) keywords.'
+              },
+              internalLinkSuggestions: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'List of relevant topics on harendralamsal.name.np to interlink with.'
+              },
+              externalAuthorityReferences: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'High authority websites/documents to cite as external references.'
+              },
+              imageAltText: {
+                type: Type.STRING,
+                description: 'The alt text for the featured header image.'
+              },
+              openGraphTitle: {
+                type: Type.STRING,
+                description: 'Open Graph Title for Facebook/LinkedIn shares.'
+              },
+              openGraphDescription: {
+                type: Type.STRING,
+                description: 'Open Graph Description for social media shares.'
+              },
+              twitterCardDescription: {
+                type: Type.STRING,
+                description: 'Short, clicky description for Twitter Card share previews.'
+              },
+              jsonLdSchema: {
+                type: Type.STRING,
+                description: 'A valid, completely valid JSON-LD BlogPosting schema as a single continuous string.'
+              },
+              tableOfContents: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    heading: { type: Type.STRING },
+                    level: { type: Type.INTEGER }
+                  },
+                  required: ['heading', 'level']
+                },
+                description: 'Table of Contents items.'
+              },
+              contentEn: {
+                type: Type.STRING,
+                description: 'The full English markdown article body containing all structured elements (background, step-by-step, code, considerations).'
+              },
+              contentNp: {
+                type: Type.STRING,
+                description: 'The full Nepali markdown article body containing localized translation of elements.'
+              },
+              faq: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    question: { type: Type.STRING },
+                    answer: { type: Type.STRING }
+                  },
+                  required: ['question', 'answer']
+                }
+              },
+              summary: {
+                type: Type.STRING,
+                description: 'High-level bulleted summary or key takeaways.'
+              },
+              relatedArticlesSuggestions: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING },
+                description: 'Suggested ideas for subsequent follow-up articles.'
+              },
+              socialMediaCaption: {
+                type: Type.STRING,
+                description: 'Ready-to-post, highly structured LinkedIn/Twitter caption with emojis and hashtags.'
+              },
+              newsletterSummary: {
+                type: Type.STRING,
+                description: 'A highly conversational, warm email newsletter summary to send to subscribers.'
+              }
+            },
+            required: [
+              'title', 'slug', 'excerpt', 'category', 'tags', 'featuredImagePrompt', 'metaTitle', 'metaDescription',
+              'canonicalSlug', 'focusKeyword', 'secondaryKeywords', 'lsiKeywords', 'internalLinkSuggestions',
+              'externalAuthorityReferences', 'imageAltText', 'openGraphTitle', 'openGraphDescription',
+              'twitterCardDescription', 'jsonLdSchema', 'tableOfContents', 'contentEn', 'contentNp', 'faq',
+              'summary', 'relatedArticlesSuggestions', 'socialMediaCaption', 'newsletterSummary'
+            ]
+          }
+        }
+      });
+
+      if (!response.text) {
+        throw new Error('No article content returned from Gemini model.');
+      }
+
+      const parsed = JSON.parse(response.text.trim());
+      res.json(parsed);
+    } catch (err: any) {
+      console.error('[Gemini Tech Writer Error]:', err.message);
+      res.status(500).json({ error: err.message || 'Server article generation failure' });
+    }
+  });
+
   // ==================== VITE MIDDLEWARE SETUP ====================
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { BlogPost, NewsItem, AnalyticsData } from '../types';
 import { INITIAL_ANALYTICS } from '../data';
+import AiArticleArchitect from './AiArticleArchitect';
 
 interface AdminDashboardProps {
   posts: BlogPost[];
@@ -51,7 +52,7 @@ export default function AdminDashboard({
   currentPassword,
   onPasswordChange,
 }: AdminDashboardProps) {
-  const [activeTab, setActiveTab] = useState<'analytics' | 'blog' | 'news' | 'seo' | 'media' | 'security'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'ai-writer' | 'blog' | 'news' | 'seo' | 'media' | 'security'>('analytics');
   
   // Password change states
   const [oldPasswordInput, setOldPasswordInput] = useState('');
@@ -352,6 +353,16 @@ export default function AdminDashboard({
             <BarChart3 size={16} />
             <span>Overview & Analytics</span>
           </button>
+
+          <button
+            onClick={() => setActiveTab('ai-writer')}
+            className={`w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+              activeTab === 'ai-writer' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white hover:bg-slate-900'
+            }`}
+          >
+            <Sparkles size={16} className="text-indigo-400" />
+            <span>AI Article Architect</span>
+          </button>
           
           <button
             onClick={() => setActiveTab('blog')}
@@ -413,6 +424,17 @@ export default function AdminDashboard({
             <Sparkles size={16} />
             <span>{aiNotice}</span>
           </div>
+        )}
+
+        {/* AI ARTICLE ARCHITECT SUITE */}
+        {activeTab === 'ai-writer' && (
+          <AiArticleArchitect
+            posts={posts}
+            news={news}
+            addBlogPost={addBlogPost}
+            addNewsItem={addNewsItem}
+            lang="en"
+          />
         )}
 
         {/* 1. ANALYTICS VIEW */}

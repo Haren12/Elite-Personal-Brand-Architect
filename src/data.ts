@@ -152,24 +152,27 @@ export const TESTIMONIALS_DATA: Testimonial[] = [
 export const CERTIFICATIONS_DATA: Certification[] = [
   {
     id: 'cert-1',
-    title: 'Google Analytics Individual Qualification',
-    issuer: 'Google',
-    date: '2024',
-    credentialUrl: 'https://google.com'
+    title: 'Complete web development course',
+    issuer: 'Udemy',
+    date: 'June 28, 2026',
+    credentialUrl: 'https://ude.my/UC-b44c0cd2-6616-478b-95aa-e50de3973c3f',
+    imageUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=800&q=80',
+    recipient: 'Harendra Lamsal',
+    instructor: 'Hitesh Choudhary',
+    length: '100 total hours',
+    credentialId: 'UC-b44c0cd2-6616-478b-95aa-e50de3973c3f'
   },
   {
     id: 'cert-2',
-    title: 'Advanced React Architecture',
-    issuer: 'Meta / Coursera',
-    date: '2023',
-    credentialUrl: 'https://coursera.org'
-  },
-  {
-    id: 'cert-3',
-    title: 'Enterprise SEO Audit Mastery',
-    issuer: 'Semrush Academy',
-    date: '2023',
-    credentialUrl: 'https://semrush.com'
+    title: 'Build a free website with WordPress',
+    issuer: 'Coursera',
+    date: 'June 28, 2026',
+    credentialUrl: 'https://coursera.org/verify/YYQ4WCFDL2IA',
+    imageUrl: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80',
+    recipient: 'Harendra Lamsal',
+    instructor: 'Delphine Sangotokun, MPH, Ph.D. (Public Health specialist)',
+    length: 'Guided Project',
+    credentialId: 'YYQ4WCFDL2IA'
   }
 ];
 
@@ -385,36 +388,36 @@ WPGraphQL को प्रयोगले साधारण REST API को त
 export const INITIAL_NEWS_ITEMS: NewsItem[] = [
   {
     id: 'news-1',
-    slug: 'gemini-3-5-unveiled-revolutionizing-multimodal-code-generation',
+    slug: 'google-gemini-1-5-pro-redefines-multimodal-context-windows-coding',
     translations: {
       en: {
-        title: 'Gemini 3.5 Unveiled: Google Redefines Server-Side Coding Speed and Multi-Turn Reasoning',
-        excerpt: 'Google officially launches Gemini 3.5. Featuring native server-side capabilities, structured translation engines, and zero-latency thinking config, it establishes a new gold standard for software developers.',
-        content: `### The Next Frontier in Multimodal AI
+        title: 'Google Gemini 1.5 Pro Unveiled: Redefining Multimodal Context Windows and Enterprise Coding Workflows',
+        excerpt: 'Google officially rolls out Gemini 1.5 Pro, featuring an industry-first 2 million token context window. With native audio/video understanding and advanced coding intelligence, it establishes a new pinnacle for AI-driven software engineering.',
+        content: `### The Multimodal Quantum Leap in Generative AI
 
-Google has officially released **Gemini 3.5**, introducing dramatic improvements in technical coding tasks, multi-speaker speech synthesis, and real-time reasoning. The new models process immense contexts with ultra-low latency, making them ideal for server-side code execution.
+Google has officially released **Gemini 1.5 Pro**, introducing a revolutionary 2-million token context window that fundamentally changes how developers and enterprises build software. This massive context capacity allows the model to process up to 1 hour of video, 11 hours of audio, over 30,000 lines of code, or 700,000 words in a single prompt.
 
-#### Unmatched Code Synthesis
+#### Redefining Developer Workflows
 
-In developer benchmarks, Gemini 3.5 surpassed previous models by 45% in complex full-stack refactoring tasks. The model's native integration with modern JavaScript frameworks enables seamless automatic sitemap generation, structured schema mappings, and immediate slug translations.
+With native multimodal understanding, developers can now upload entire codebases or complex system documentation directly into the context window. Gemini 1.5 Pro can reason across large repositories, trace bugs across hundreds of files, suggest architectural improvements, and generate high-fidelity boilerplate code with zero lag.
 
-#### Live Translation Breakthroughs
+#### Cross-Modal Reasoning and Audio Understanding
 
-Using the \`gemini-3.5-live-translate-preview\` engine, developers can now translate high-fidelity spoken dialogue with zero lag. This is set to transform localized technology blogs, customer support systems, and multilingual news portals globally.`
+A key breakthrough in the Gemini 1.5 Pro model is its ability to perform high-fidelity audio understanding and multimodal reasoning. Developers can pass recorded team meetings, legacy video tutorials, or system design audio recordings, and the model will instantly extract structured schemas, API designs, and execution logs with absolute precision. This is set to redefine localized tech hubs, customer service channels, and automated coding pipelines worldwide.`
       },
       ne: {
-        title: 'जेमिनाई ३.५ सार्वजनिक: गुगलद्वारा प्रोग्रामिङ र मल्टिमोडल एआईमा ऐतिहासिक फड्को',
-        excerpt: 'गुगलले औपचारिक रूपमा जेमिनाई ३.५ सार्वजनिक गरेको छ। उत्कृष्ट सर्भर-साइड क्षमता, भाषा अनुवाद र तीव्र गति सहित यसले प्रविधि क्षेत्रमा नयाँ मापदण्ड खडा गरेको छ।',
-        content: `### मल्टिमोडल एआईको नयाँ युग
+        title: 'गुगल जेमिनाई १.५ प्रो सार्वजनिक: २ लाख टोकन कन्टेक्स्ट विन्डो र प्रोग्रामिङ क्षमतामा ऐतिहासिक फड्को',
+        excerpt: 'गुगलले औपचारिक रूपमा जेमिनाई १.५ प्रो सार्वजनिक गरेको छ, जसमा संसारकै पहिलो २ लाख (२ मिलियन) टोकन क्षमताको कन्टेक्स्ट विन्डो रहेको छ। यसले भिडियो, अडियो र कोडिङ विश्लेषणमा नयाँ आयाम थपेको छ।',
+        content: `### मल्टिमोडल जेनेरेटिभ एआईमा नयाँ युगको सुरुवात
 
-गुगलले आधिकारिक रूपमा **जेमिनाई ३.५** सार्वजनिक गरेको छ, जसले प्रोग्रामिङ, बहु-आयामिक आवाज विश्लेषण र द्रुत गतिमा निर्णय लिने क्षमतामा ठूलो सुधार ल्याएको छ। यसले नेपाली लगायतका क्षेत्रीय भाषाहरूको अनुवादमा असाधारण परिणाम देखाएको छ।
+गुगलले आधिकारिक रूपमा **जेमिनाई १.५ प्रो** सार्वजनिक गरेको छ, जसले २ लाख (२ मिलियन) टोकन क्षमताको कन्टेक्स्ट विन्डो मार्फत प्रविधि र सफ्टवेयर विकासको क्षेत्रलाई पूर्ण रूपमा रूपान्तरण गरेको छ। यस ऐतिहासिक क्षमताले गर्दा अब प्रयोगकर्ताले १ घण्टाको भिडियो, ११ घण्टाको अडियो, वा ३०,००० भन्दा बढी लाइन भएको सम्पूर्ण कोडबेस एकै पटक प्रम्प्टमा राखेर विश्लेषण गर्न सक्छन्।
 
-#### प्रोग्रामिङ क्षेत्रमा क्रान्ति
+#### सफ्टवेयर इन्जिनियरिङमा यसको प्रभाव
 
-डेभलपरहरूको परीक्षणमा जेमिनाई ३.५ ले जटिल कोडिङ कार्यहरूमा साविकका मोडेलहरू भन्दा ४५% बढी दक्षता देखाएको छ। यसको सहयोगले अब वेभसाइटहरू स्वतः बहुभाषी बन्न र उत्कृष्ट प्रदर्शन गर्न सक्छन्।`
+सफ्टवेयर डेभलपरहरूले अब आफ्नो सम्पूर्ण प्रोजेक्टको कोडबेस जेमिनाई १.५ प्रोमा अपलोड गरेर बगहरू पत्ता लगाउन, नयाँ फिचरहरू थप्न, वा सिस्टम आर्किटेक्चरलाई सुदृढ बनाउन सक्छन्। यसले कोडिङ र रिफ्याक्टरिङको गतिलाई दश गुणा बढाउने निश्चित छ।`
       }
     },
-    featuredImage: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?auto=format&fit=crop&w=1200&q=80',
+    featuredImage: 'https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&w=1200&q=80',
     category: 'Artificial Intelligence',
     tags: ['Google Gemini', 'AI', 'Technology News', 'Software Engineering'],
     publishedAt: '2026-06-28T09:15:00Z',
@@ -527,7 +530,7 @@ export const INITIAL_ANALYTICS: AnalyticsData = {
     { date: '06-28', visitors: 2500, views: 5600 }
   ],
   popularPosts: [
-    { title: 'Gemini 3.5 Unveiled: Google Redefines Server-Side Coding Speed', views: 4500, type: 'news' },
+    { title: 'Google Gemini 1.5 Pro Unveiled: Redefining Multimodal Context Windows', views: 4500, type: 'news' },
     { title: 'NIST Finalizes Post-Quantum Cryptography Standards', views: 2310, type: 'news' },
     { title: 'Mastering React 19 SSR for Advanced Performance and Flawless SEO', views: 1240, type: 'blog' },
     { title: 'Architecting Headless WordPress with GraphQL and TanStack', views: 890, type: 'blog' }
@@ -536,7 +539,7 @@ export const INITIAL_ANALYTICS: AnalyticsData = {
     { keyword: 'React 19 SEO optimization', count: 480 },
     { keyword: 'Harendra Lamsal portfolio', count: 320 },
     { keyword: 'Headless WordPress GraphQL Nepal', count: 180 },
-    { keyword: 'Gemini 3.5 API server-side', count: 150 },
+    { keyword: 'Gemini 1.5 Pro 2M context', count: 150 },
     { keyword: 'Nepal cybersecurity standards', count: 120 }
   ],
   brokenLinks: [

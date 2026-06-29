@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { motion } from 'motion/react';
-import { Terminal, TrendingUp, Cpu, Sparkles, FolderGit, ExternalLink, Calendar, Award, CheckCircle2, ChevronRight, Download, Share2, BookOpen } from 'lucide-react';
-import { SKILLS_DATA, EXPERIENCES_DATA, SERVICES_DATA, PROJECTS_DATA, TESTIMONIALS_DATA, CERTIFICATIONS_DATA, ACHIEVEMENTS_DATA } from '../data';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Terminal, TrendingUp, Cpu, Sparkles, FolderGit, ExternalLink, Calendar, Award, CheckCircle2, ChevronRight, Download, Share2, BookOpen, Eye, X } from 'lucide-react';
+import { SKILLS_DATA, EXPERIENCES_DATA, SERVICES_DATA, PROJECTS_DATA, TESTIMONIALS_DATA, ACHIEVEMENTS_DATA } from '../data';
+import Certifications from './Certifications';
 
 interface PortfolioViewProps {
   lang: 'en' | 'ne';
@@ -280,40 +282,13 @@ export default function PortfolioView({ lang, setView }: PortfolioViewProps) {
         </div>
       </section>
 
-      {/* 5. Certifications & Achievements */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 border-t border-slate-900 pt-16">
-        {/* Certifications */}
-        <div className="space-y-6 text-left">
-          <div className="flex items-center space-x-2">
-            <Award className="text-indigo-400" />
-            <h2 className="text-2xl font-bold text-white" style={{ fontFamily: '"Space Grotesk", sans-serif' }}>
-              {lang === 'ne' ? 'प्रमाणपत्रहरू' : 'Certifications'}
-            </h2>
-          </div>
+      {/* 5. Certifications */}
+      <section className="border-t border-slate-900 pt-16">
+        <Certifications lang={lang} />
+      </section>
 
-          <div className="space-y-4">
-            {CERTIFICATIONS_DATA.map((cert) => (
-              <div key={cert.id} className="p-4 rounded-lg border border-slate-850 bg-slate-900/30 flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-bold text-white">{cert.title}</h3>
-                  <div className="text-xs text-slate-400">{cert.issuer} • {cert.date}</div>
-                </div>
-                {cert.credentialUrl && (
-                  <a
-                    href={cert.credentialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs font-semibold text-indigo-400 hover:text-indigo-300"
-                  >
-                    Verify
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Achievements */}
+      {/* 5b. Achievements */}
+      <section className="border-t border-slate-900 pt-16">
         <div className="space-y-6 text-left">
           <div className="flex items-center space-x-2">
             <Award className="text-indigo-400" />
@@ -322,9 +297,9 @@ export default function PortfolioView({ lang, setView }: PortfolioViewProps) {
             </h2>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {ACHIEVEMENTS_DATA.map((ach) => (
-              <div key={ach.id} className="p-4 rounded-lg border border-slate-850 bg-slate-900/30 space-y-2">
+              <div key={ach.id} className="p-5 rounded-xl border border-slate-850 bg-slate-900/30 hover:bg-slate-900/50 hover:border-slate-800 transition-all duration-300 space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-white">
                     {lang === 'ne' ? ach.titleNp : ach.titleEn}

@@ -117,6 +117,11 @@ export interface Certification {
   issuer: string;
   date: string;
   credentialUrl?: string;
+  imageUrl?: string;
+  recipient?: string;
+  instructor?: string;
+  length?: string;
+  credentialId?: string;
 }
 
 export interface Achievement {

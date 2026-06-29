@@ -47,21 +47,21 @@ export function CustomMarkdown({ content }: { content: string }) {
     // 2. Headings
     if (line.startsWith('### ')) {
       return (
-        <h4 key={idx} className="text-lg font-bold text-white mt-6 mb-3 border-b border-slate-900 pb-1">
+        <h4 key={idx} className="text-xl font-bold text-white mt-8 mb-4 border-b border-slate-900 pb-2">
           {line.replace('### ', '')}
         </h4>
       );
     }
     if (line.startsWith('## ')) {
       return (
-        <h3 key={idx} className="text-xl font-bold text-white mt-8 mb-4 border-l-4 border-indigo-500 pl-3">
+        <h3 key={idx} className="text-2xl font-bold text-white mt-10 mb-5 border-l-4 border-indigo-500 pl-4">
           {line.replace('## ', '')}
         </h3>
       );
     }
     if (line.startsWith('# ')) {
       return (
-        <h2 key={idx} className="text-2xl font-extrabold text-white mt-10 mb-4">
+        <h2 key={idx} className="text-3xl font-extrabold text-white mt-12 mb-6">
           {line.replace('# ', '')}
         </h2>
       );
@@ -70,7 +70,7 @@ export function CustomMarkdown({ content }: { content: string }) {
     // 3. Blockquotes
     if (line.startsWith('> ')) {
       return (
-        <blockquote key={idx} className="border-l-4 border-slate-700 bg-slate-900/40 px-4 py-3 my-4 italic text-slate-300 rounded-r">
+        <blockquote key={idx} className="border-l-4 border-indigo-500 bg-slate-900/60 px-5 py-4 my-6 italic text-slate-200 text-base md:text-lg rounded-r">
           {line.replace('> ', '')}
         </blockquote>
       );
@@ -79,7 +79,7 @@ export function CustomMarkdown({ content }: { content: string }) {
     // 4. Bullet lists
     if (line.startsWith('- ')) {
       return (
-        <li key={idx} className="list-disc list-inside text-slate-400 pl-4 my-1.5 leading-relaxed">
+        <li key={idx} className="list-disc list-inside text-slate-300 text-base md:text-lg pl-4 my-2 leading-relaxed">
           {line.replace('- ', '')}
         </li>
       );
@@ -87,7 +87,7 @@ export function CustomMarkdown({ content }: { content: string }) {
 
     // 5. Empty lines
     if (line.trim() === '') {
-      return <div key={idx} className="h-2" />;
+      return <div key={idx} className="h-4" />;
     }
 
     // 6. Bold / Italic / Code processing for inline text
@@ -95,12 +95,12 @@ export function CustomMarkdown({ content }: { content: string }) {
     // Replace markdown bold (**text**)
     processed = processed.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
     // Replace inline code (`code`)
-    processed = processed.replace(/`(.*?)`/g, '<code class="bg-slate-900 border border-slate-850 text-indigo-400 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
+    processed = processed.replace(/`(.*?)`/g, '<code class="bg-slate-900 border border-slate-800 text-indigo-300 px-2 py-0.5 rounded text-sm font-mono">$1</code>');
 
     return (
       <p
         key={idx}
-        className="text-slate-300 text-sm md:text-base leading-relaxed my-3"
+        className="text-slate-300 text-base md:text-lg leading-relaxed my-4"
         dangerouslySetInnerHTML={{ __html: processed }}
       />
     );

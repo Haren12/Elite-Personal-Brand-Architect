@@ -58,7 +58,19 @@ export default function App() {
     }
 
     if (savedNews) {
-      setNewsItems(JSON.parse(savedNews));
+      try {
+        const parsedNews = JSON.parse(savedNews) as NewsItem[];
+        const hasLatest = parsedNews.some(n => n.slug === 'google-gemini-1-5-pro-redefines-multimodal-context-windows-coding');
+        if (!hasLatest) {
+          setNewsItems(INITIAL_NEWS_ITEMS);
+          localStorage.setItem('harendra_news', JSON.stringify(INITIAL_NEWS_ITEMS));
+        } else {
+          setNewsItems(parsedNews);
+        }
+      } catch (e) {
+        setNewsItems(INITIAL_NEWS_ITEMS);
+        localStorage.setItem('harendra_news', JSON.stringify(INITIAL_NEWS_ITEMS));
+      }
     } else {
       setNewsItems(INITIAL_NEWS_ITEMS);
     }
