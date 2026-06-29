@@ -39,6 +39,8 @@ interface AdminDashboardProps {
   importBackup: (backup: { posts: BlogPost[]; news: NewsItem[] }) => void;
   currentPassword: string;
   onPasswordChange: (newPass: string) => void;
+  supabaseConfigured?: boolean;
+  supabaseStatusLoading?: boolean;
 }
 
 export default function AdminDashboard({
@@ -51,6 +53,8 @@ export default function AdminDashboard({
   importBackup,
   currentPassword,
   onPasswordChange,
+  supabaseConfigured = false,
+  supabaseStatusLoading = false,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<'analytics' | 'ai-writer' | 'blog' | 'news' | 'seo' | 'media' | 'security'>('analytics');
   
@@ -551,6 +555,58 @@ export default function AdminDashboard({
                   ))}
                 </div>
               </div>
+            </div>
+
+            {/* Live Database Integration Status Panel */}
+            <div className="p-6 rounded-xl border border-slate-850 bg-slate-900/30 space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
+                    <TrendingUp size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Live Supabase Database Integration</h3>
+                    <p className="text-[10px] font-mono text-slate-500 uppercase">Backend connectivity status</p>
+                  </div>
+                </div>
+                {supabaseStatusLoading ? (
+                  <span className="text-xs text-slate-500 font-mono animate-pulse">Scanning connection...</span>
+                ) : supabaseConfigured ? (
+                  <span className="rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 text-xs font-mono font-bold flex items-center space-x-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Active & Connected</span>
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-slate-800 text-slate-400 border border-slate-700 px-3 py-1 text-xs font-mono font-medium">
+                    Offline Cache Mode
+                  </span>
+                )}
+              </div>
+
+              {supabaseConfigured ? (
+                <div className="text-xs text-slate-400 leading-relaxed space-y-2">
+                  <p>
+                    Your portfolio application is fully connected to your live Supabase backend. When you add, edit, or delete blog publications, the mutations are securely persisted directly in your Supabase relational database tables (<code className="text-indigo-400 font-mono">blog_posts</code> &amp; <code className="text-indigo-400 font-mono font-medium">blog_categories</code>).
+                  </p>
+                  <div className="p-3.5 rounded bg-slate-950 border border-slate-850 font-mono text-[11px] text-slate-500 space-y-1">
+                    <div><span className="text-slate-300 font-semibold">Connection Class:</span> Full-Stack Secure API Router Proxy</div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 leading-relaxed space-y-3">
+                  <p>
+                    The CMS is currently executing in local cache mode. Created blogs are stored in high-performance local memory and synced to client-side localStorage. To wire this up to your real Supabase server (such as your old database at <code className="text-indigo-400 font-mono font-semibold">harendralamsal.name.np</code>):
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1.5 pl-1 text-[11px] text-slate-400">
+                    <li>Go to the <span className="font-bold text-slate-300">Secrets (API keys) panel</span> in AI Studio Settings</li>
+                    <li>Add your <code className="text-indigo-400 font-mono font-medium">SUPABASE_URL</code> variable</li>
+                    <li>Add your <code className="text-indigo-400 font-mono font-medium">SUPABASE_ANON_KEY</code> variable</li>
+                  </ol>
+                  <p className="text-[11px] text-indigo-400 font-medium">
+                    Once set up, the application automatically triggers schema orchestration and live publication synchronization!
+                  </p>
+                </div>
+              )}
             </div>
 
           </div>

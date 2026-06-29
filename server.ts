@@ -12,6 +12,14 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Supabase integrations
+import {
+  getSupabase,
+  getMappedBlogPosts,
+  insertMappedBlogPost,
+  deleteSupabasePost
+} from './server/supabase-service';
+
 const PORT = 3000;
 
 // Lazy initialize Gemini client to prevent startup crash if key is missing
@@ -42,6 +50,60 @@ async function startServer() {
   // ==================== API ROUTE: HEALTH CHECK ====================
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', serverTime: new Date().toISOString() });
+  });
+
+  // ==================== API ROUTE: SUPABASE INTEGRATION STATUS ====================
+  app.get('/api/supabase/status', (req, res) => {
+    const isConfigured = !!(process.env.SUPABASE_URL && (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY));
+    res.json({
+      configured: isConfigured,
+      supabaseUrl: process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.substring(0, 15)}...` : null
+    });
+  });
+
+  // ==================== API ROUTES: SUPABASE BLOG OPERATIONS ====================
+  app.get('/api/supabase/blogs', async (req, res) => {
+    try {
+      const client = getSupabase();
+      if (!client) {
+        return res.json({ configured: false, posts: [] });
+      }
+      const posts = await getMappedBlogPosts();
+      res.json({ configured: true, posts });
+    } catch (err: any) {
+      console.error('[Supabase Fetch Error]:', err.message);
+      res.status(500).json({ error: err.message || 'Failed to fetch blogs from Supabase.' });
+    }
+  });
+
+  app.post('/api/supabase/blogs', async (req, res) => {
+    try {
+      const client = getSupabase();
+      if (!client) {
+        return res.status(400).json({ error: 'Supabase credentials are not configured in your environment secrets.' });
+      }
+      const post = req.body;
+      const data = await insertMappedBlogPost(post);
+      res.json({ success: true, data });
+    } catch (err: any) {
+      console.error('[Supabase Insert Error]:', err.message);
+      res.status(500).json({ error: err.message || 'Failed to insert blog post to Supabase.' });
+    }
+  });
+
+  app.delete('/api/supabase/blogs/:id', async (req, res) => {
+    try {
+      const client = getSupabase();
+      if (!client) {
+        return res.status(400).json({ error: 'Supabase credentials are not configured in your environment secrets.' });
+      }
+      const { id } = req.params;
+      await deleteSupabasePost(id);
+      res.json({ success: true, id });
+    } catch (err: any) {
+      console.error('[Supabase Delete Error]:', err.message);
+      res.status(500).json({ error: err.message || 'Failed to delete blog post from Supabase.' });
+    }
   });
 
   // ==================== API ROUTE: GEMINI TRANSLATOR ====================

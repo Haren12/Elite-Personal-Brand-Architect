@@ -30,6 +30,10 @@ export default function App() {
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
 
+  // Supabase Configuration Status State
+  const [supabaseConfigured, setSupabaseConfigured] = useState(false);
+  const [supabaseStatusLoading, setSupabaseStatusLoading] = useState(true);
+
   // Authentication State
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
   const [loginEmail, setLoginEmail] = useState('');
@@ -78,19 +82,83 @@ export default function App() {
     if (authStatus === 'true') {
       setIsAdminLoggedIn(true);
     }
+
+    // Connect and synchronize with Supabase backend database if available
+    const syncSupabase = async () => {
+      try {
+        const statusRes = await fetch('/api/supabase/status');
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          setSupabaseConfigured(statusData.configured);
+          
+          if (statusData.configured) {
+            const blogsRes = await fetch('/api/supabase/blogs');
+            if (blogsRes.ok) {
+              const blogsData = await blogsRes.json();
+              if (blogsData.configured && blogsData.posts && blogsData.posts.length > 0) {
+                setBlogPosts(blogsData.posts);
+                localStorage.setItem('harendra_blogs', JSON.stringify(blogsData.posts));
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[Supabase Sync Warning]: Could not reach the server API:', err);
+      } finally {
+        setSupabaseStatusLoading(false);
+      }
+    };
+
+    syncSupabase();
   }, []);
 
-  // Sync to state & cache
-  const addBlogPost = (newPost: BlogPost) => {
+  // Sync to state, local cache & Supabase backend if configured
+  const addBlogPost = async (newPost: BlogPost) => {
+    // 1. Instantly update UI for snappy user feedback (optimistic update)
     const updated = [newPost, ...blogPosts];
     setBlogPosts(updated);
     localStorage.setItem('harendra_blogs', JSON.stringify(updated));
+
+    // 2. Persist to Supabase in the background
+    if (supabaseConfigured) {
+      try {
+        const res = await fetch('/api/supabase/blogs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPost)
+        });
+        if (!res.ok) {
+          console.warn('[Supabase Save Error]: Server returned non-OK code.');
+        } else {
+          console.log('[Supabase]: Blog post saved successfully to live database.');
+        }
+      } catch (e) {
+        console.warn('[Supabase Sync Error]: Network issue during save:', e);
+      }
+    }
   };
 
-  const deleteBlogPost = (id: string) => {
+  const deleteBlogPost = async (id: string) => {
+    // 1. Instantly update UI (optimistic)
     const updated = blogPosts.filter((p) => p.id !== id);
     setBlogPosts(updated);
     localStorage.setItem('harendra_blogs', JSON.stringify(updated));
+
+    // 2. Persist deletion in the background
+    if (supabaseConfigured) {
+      try {
+        const res = await fetch(`/api/supabase/blogs/${id}`, {
+          method: 'DELETE'
+        });
+        if (!res.ok) {
+          console.warn('[Supabase Delete Error]: Server returned non-OK status.');
+        } else {
+          console.log('[Supabase]: Blog post deleted successfully from live database.');
+        }
+      } catch (e) {
+        console.warn('[Supabase Sync Error]: Network issue during deletion:', e);
+      }
+    }
   };
 
   const addNewsItem = (newItem: NewsItem) => {
@@ -201,7 +269,17 @@ export default function App() {
                   <div className="space-y-6">
                     <div className="flex justify-between items-center border-b border-slate-900 pb-4">
                       <div className="text-left">
-                        <span className="text-xs font-mono text-emerald-400">ADMIN SESSION ACTIVE</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-mono text-emerald-400">ADMIN SESSION ACTIVE</span>
+                          <span className="text-slate-700">•</span>
+                          {supabaseStatusLoading ? (
+                            <span className="text-[10px] font-mono text-slate-500 animate-pulse">Checking Database...</span>
+                          ) : supabaseConfigured ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-mono font-medium">Supabase Connected</span>
+                          ) : (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400 font-mono">Offline Local Cache</span>
+                          )}
+                        </div>
                         <h2 className="text-xl font-bold text-white">Central CMS Command Centre</h2>
                       </div>
                       <button
@@ -223,6 +301,8 @@ export default function App() {
                       importBackup={importBackup}
                       currentPassword={adminPassword}
                       onPasswordChange={handlePasswordChange}
+                      supabaseConfigured={supabaseConfigured}
+                      supabaseStatusLoading={supabaseStatusLoading}
                     />
                   </div>
                 ) : (
