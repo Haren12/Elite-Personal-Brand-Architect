@@ -138,50 +138,18 @@ export default function Hero({ lang, setView }: HeroProps) {
               {/* The Headshot Image with a deep dark premium overlay to resemble the elite portfolio style */}
               <div className="relative h-[400px] w-full overflow-hidden rounded-xl bg-slate-950 flex flex-col justify-between">
                 
-                {/* Fallback SVG profile or direct visual of Harendra */}
+                {/* Displaying real high-quality studio headshot of Harendra */}
                 <div className="absolute inset-0 z-0">
-                  <div className="absolute inset-0 bg-slate-950/20 z-10" />
-                  <svg className="w-full h-full object-cover text-slate-800" viewBox="0 0 400 500" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    {/* Dark gradient backdrop */}
-                    <rect width="400" height="500" fill="#020617"/>
-                    <circle cx="200" cy="180" r="110" fill="#312e81" fillOpacity="0.4" filter="blur(20px)"/>
-                    <circle cx="200" cy="180" r="85" fill="#111827"/>
-                    
-                    {/* Vector representation of his headshot details */}
-                    <g opacity="0.95">
-                      {/* Hair outline */}
-                      <path d="M120,180 Q110,130 150,110 Q200,85 250,110 Q290,130 280,180" stroke="#000000" strokeWidth="20" strokeLinecap="round"/>
-                      <path d="M115,170 C100,100 300,100 285,170" fill="#1e1b4b"/>
-                      
-                      {/* Face skin tone */}
-                      <path d="M140,160 Q200,120 260,160 Q265,220 250,250 Q200,285 150,250 Q135,220 140,160" fill="#ffedd5"/>
-                      
-                      {/* Eyeglasses */}
-                      <rect x="150" y="170" width="40" height="25" rx="5" stroke="#1e293b" strokeWidth="4" fill="none"/>
-                      <rect x="210" y="170" width="40" height="25" rx="5" stroke="#1e293b" strokeWidth="4" fill="none"/>
-                      <line x1="190" y1="180" x2="210" y2="180" stroke="#1e293b" strokeWidth="4"/>
-                      
-                      {/* Eyes */}
-                      <circle cx="170" cy="182" r="3" fill="#000000"/>
-                      <circle cx="230" cy="182" r="3" fill="#000000"/>
-                      
-                      {/* Mustache and beard */}
-                      <path d="M180,215 Q200,210 220,215 Q200,225 180,215" fill="#1e293b"/>
-                      <path d="M155,240 Q200,270 245,240 Q200,260 155,240" fill="#1e293b"/>
-                      
-                      {/* Neck and suit */}
-                      <path d="M170,260 L230,260 L230,290 L170,290 Z" fill="#ffedd5"/>
-                      <path d="M110,300 C150,290 250,290 290,300 L320,500 L80,500 Z" fill="#09090b"/>
-                      {/* Lapels of suit jacket */}
-                      <path d="M140,300 L200,410 L160,500" stroke="#27272a" strokeWidth="4" fill="none"/>
-                      <path d="M260,300 L200,410 L240,500" stroke="#27272a" strokeWidth="4" fill="none"/>
-                      {/* Shirt collar */}
-                      <path d="M170,300 L200,340 L230,300" fill="#000000"/>
-                    </g>
-                  </svg>
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/20 to-slate-950/20 z-10" />
+                  <img
+                    src="/harendra_profile.jpg"
+                    alt="Harendra Lamsal - Elite Full-Stack Engineer"
+                    className="w-full h-full object-cover object-center scale-[1.02] group-hover:scale-105 transition-transform duration-500"
+                    referrerPolicy="no-referrer"
+                  />
                   {/* Subtle watermarked overlay */}
                   <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent p-6 flex flex-col justify-end z-20">
-                    <span className="text-white text-sm font-bold block">Harendra Lamsal</span>
+                    <span className="text-white text-base font-bold block" style={{ fontFamily: '"Space Grotesk", sans-serif' }}>Harendra Lamsal</span>
                     <span className="text-xs text-indigo-400 font-mono tracking-wider mt-0.5">EST. KATHMANDU, NEPAL</span>
                   </div>
                 </div>

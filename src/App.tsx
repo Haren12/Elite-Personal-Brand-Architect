@@ -20,6 +20,7 @@ import NewsView from './components/NewsView';
 import ContactView from './components/ContactView';
 import AdminDashboard from './components/AdminDashboard';
 import Newsletter from './components/Newsletter';
+import BrandLogo from './components/BrandLogo';
 
 export default function App() {
   const [lang, setLang] = useState<'en' | 'ne'>('en');
@@ -323,8 +324,8 @@ export default function App() {
           
           {/* Main Brand Section */}
           <div className="md:col-span-4 space-y-4">
-            <div className="flex items-center space-x-2">
-              <span className="h-6 w-6 rounded-full bg-indigo-600 flex items-center justify-center text-[10px] font-bold text-white">HL</span>
+            <div className="flex items-center space-x-2.5">
+              <BrandLogo size="sm" />
               <span className="text-base font-extrabold text-white" style={{ fontFamily: '"Space Grotesk", sans-serif' }}>
                 Harendra Lamsal
               </span>

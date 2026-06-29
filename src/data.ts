@@ -198,7 +198,7 @@ export const INITIAL_BLOG_POSTS: BlogPost[] = [
     slug: 'optimizing-react-19-server-side-rendering',
     author: {
       name: 'Harendra Lamsal',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
+      avatar: '/harendra_profile.jpg',
       bioEn: 'Harendra is a leading Full Stack developer specializing in React, high-performance SEO, and AI integrations.',
       bioNp: 'हरेन्द्र रियाक्ट, उच्च-स्तरीय एसईओ र एआई एकीकरणमा दख्खल राख्ने एक अग्रणी फुल-स्ट्याक डेभलपर हुन्।',
       role: 'Chief Solution Architect'
@@ -317,7 +317,7 @@ export function SafeClientTime() {
     slug: 'advanced-wordpress-headless-graphql-architecture',
     author: {
       name: 'Harendra Lamsal',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
+      avatar: '/harendra_profile.jpg',
       bioEn: 'Harendra is a leading Full Stack developer specializing in React, high-performance SEO, and AI integrations.',
       bioNp: 'हरेन्द्र रियाक्ट, उच्च-स्तरीय एसईओ र एआई एकीकरणमा दख्खल राख्ने एक अग्रणी फुल-स्ट्याक डेभलपर हुन्।',
       role: 'Chief Solution Architect'

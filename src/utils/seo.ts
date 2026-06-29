@@ -14,7 +14,7 @@ export function getPersonSchema() {
     '@id': `${SITE_URL}/#person`,
     'name': 'Harendra Lamsal',
     'url': SITE_URL,
-    'image': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80', // Replaceable with real photo
+    'image': '/harendra_profile.jpg', // Real professional headshot
     'email': 'harendralamsal4140@gmail.com',
     'jobTitle': 'Lead Full-Stack Developer & SEO Specialist',
     'description': 'Elite Software Engineer, WordPress Specialist, Digital Marketer and AI Strategist from Nepal.',

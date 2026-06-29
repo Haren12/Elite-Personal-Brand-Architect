@@ -218,7 +218,7 @@ export default function AdminDashboard({
       slug,
       author: {
         name: 'Harendra Lamsal',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80',
+        avatar: '/harendra_profile.jpg',
         bioEn: 'Elite developer',
         bioNp: 'वरिष्ठ डेभलपर',
         role: 'Chief Solution Architect'

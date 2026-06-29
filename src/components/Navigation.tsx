@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { Menu, X, Globe, Terminal, ShieldAlert, Award, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import BrandLogo from './BrandLogo';
 
 interface NavigationProps {
   currentView: 'home' | 'blog' | 'news' | 'contact' | 'admin';
@@ -38,14 +39,14 @@ export default function Navigation({
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand Logo */}
         <div 
-          className="flex cursor-pointer items-center space-x-2 text-xl font-bold tracking-tight text-white hover:opacity-90"
+          className="flex cursor-pointer items-center space-x-2.5 text-xl font-bold tracking-tight text-white hover:opacity-90 group"
           onClick={() => { setView('home'); setIsOpen(false); }}
           id="nav-logo"
         >
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 font-mono text-white">
-            HL
-          </div>
-          <span className="font-sans hidden sm:inline-block">Harendra Lamsal</span>
+          <BrandLogo size="md" />
+          <span className="font-sans hidden sm:inline-block bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent group-hover:to-indigo-300 transition-all duration-300">
+            Harendra Lamsal
+          </span>
         </div>
 
         {/* Desktop Navigation */}
