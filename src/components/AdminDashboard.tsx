@@ -83,7 +83,7 @@ export default function AdminDashboard({
   const [newsTitle, setNewsTitle] = useState('');
   const [newsExcerpt, setNewsExcerpt] = useState('');
   const [newsContent, setNewsContent] = useState('');
-  const [newsCategory, setNewsCategory] = useState<'Artificial Intelligence' | 'Cyber Security' | 'Programming' | 'Web Development' | 'WordPress' | 'SEO' | 'Digital Marketing' | 'Startup' | 'Nepal News' | 'World News' | 'Opinion' | 'Tutorials'>('Artificial Intelligence');
+  const [newsCategory, setNewsCategory] = useState<string>('Artificial Intelligence');
   const [newsTags, setNewsTags] = useState('AI, Google');
   const [newsIsBreaking, setNewsIsBreaking] = useState(false);
   const [newsIsTrending, setNewsIsTrending] = useState(false);
@@ -753,6 +753,25 @@ export default function AdminDashboard({
                     <option value="WordPress">WordPress</option>
                     <option value="SEO">SEO</option>
                     <option value="Digital Marketing">Digital Marketing</option>
+                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                    <option value="Cyber Security">Cyber Security</option>
+                    <option value="Programming">Programming</option>
+                    <option value="Startup">Startup</option>
+                    <option value="Nepal News">Nepal News</option>
+                    <option value="World News">World News</option>
+                    <option value="Opinion">Opinion</option>
+                    <option value="Tutorials">Tutorials</option>
+                    <option value="Health & Wellness">Health & Wellness</option>
+                    <option value="Education">Education</option>
+                    <option value="Business & Finance">Business & Finance</option>
+                    <option value="Lifestyle">Lifestyle</option>
+                    <option value="Sports & Fitness">Sports & Fitness</option>
+                    <option value="General News">General News</option>
+                    <option value="Travel & Tourism">Travel & Tourism</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Science & Technology">Science & Technology</option>
+                    <option value="Agriculture & Farming">Agriculture & Farming</option>
+                    <option value="Food & Recipes">Food & Recipes</option>
                   </select>
                 </div>
 
@@ -935,7 +954,7 @@ export default function AdminDashboard({
                   <label className="text-xs font-bold text-slate-400 uppercase font-mono">Category</label>
                   <select
                     value={newsCategory}
-                    onChange={(e) => setNewsCategory(e.target.value as any)}
+                    onChange={(e) => setNewsCategory(e.target.value)}
                     className="w-full rounded border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-200 focus:border-indigo-500"
                   >
                     <option value="Artificial Intelligence">Artificial Intelligence</option>
@@ -950,6 +969,17 @@ export default function AdminDashboard({
                     <option value="World News">World News</option>
                     <option value="Opinion">Opinion</option>
                     <option value="Tutorials">Tutorials</option>
+                    <option value="Health & Wellness">Health & Wellness</option>
+                    <option value="Education">Education</option>
+                    <option value="Business & Finance">Business & Finance</option>
+                    <option value="Lifestyle">Lifestyle</option>
+                    <option value="Sports & Fitness">Sports & Fitness</option>
+                    <option value="General News">General News</option>
+                    <option value="Travel & Tourism">Travel & Tourism</option>
+                    <option value="Entertainment">Entertainment</option>
+                    <option value="Science & Technology">Science & Technology</option>
+                    <option value="Agriculture & Farming">Agriculture & Farming</option>
+                    <option value="Food & Recipes">Food & Recipes</option>
                   </select>
                 </div>
 

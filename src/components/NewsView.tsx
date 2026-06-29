@@ -21,21 +21,36 @@ export default function NewsView({ news, lang, setView }: NewsViewProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  // Derive categories from news list
-  const newsCategories = [
-    'Artificial Intelligence',
-    'Cyber Security',
-    'Programming',
-    'Web Development',
-    'WordPress',
-    'SEO',
-    'Digital Marketing',
-    'Startup',
-    'Nepal News',
-    'World News',
-    'Opinion',
-    'Tutorials',
-  ] as const;
+  // Derive categories from news list with multipurpose defaults
+  const newsCategories = useMemo(() => {
+    const defaults = [
+      'Artificial Intelligence',
+      'Cyber Security',
+      'Programming',
+      'Web Development',
+      'WordPress',
+      'SEO',
+      'Digital Marketing',
+      'Startup',
+      'Nepal News',
+      'World News',
+      'Opinion',
+      'Tutorials',
+      'Health & Wellness',
+      'Education',
+      'Business & Finance',
+      'Lifestyle',
+      'Sports & Fitness',
+      'General News',
+      'Travel & Tourism',
+      'Entertainment',
+      'Science & Technology',
+      'Agriculture & Farming',
+      'Food & Recipes'
+    ];
+    const existing = news.map((n) => n.category).filter(Boolean);
+    return Array.from(new Set([...defaults, ...existing]));
+  }, [news]);
 
   // Filter breaking news for the ticker
   const breakingNews = useMemo(() => {

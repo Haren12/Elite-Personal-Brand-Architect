@@ -95,6 +95,7 @@ export default function AiArticleArchitect({
   const [tone, setTone] = useState('Professional & Direct');
   const [wordCount, setWordCount] = useState('Medium (~1500 words)');
   const [additionalInstructions, setAdditionalInstructions] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All-Purpose / Auto-Detect');
 
   // UI state
   const [isGenerating, setIsGenerating] = useState(false);
@@ -143,6 +144,7 @@ export default function AiArticleArchitect({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic,
+          category: selectedCategory,
           mode,
           lang: targetLang,
           additionalInstructions,
@@ -155,8 +157,25 @@ export default function AiArticleArchitect({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Server error occurred during generation.');
+        let errorMessage = 'Server error occurred during generation.';
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const errorData = await response.json();
+            errorMessage = errorData.error || errorMessage;
+          } else {
+            const rawText = await response.text();
+            // Clean up html or raw error if needed
+            if (rawText && rawText.length < 500) {
+              errorMessage = rawText;
+            } else {
+              errorMessage = `Server Error (${response.status}): ${response.statusText}`;
+            }
+          }
+        } catch (parseErr) {
+          errorMessage = `Server Error (${response.status}): ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
@@ -346,6 +365,41 @@ export default function AiArticleArchitect({
 
             {/* GRID OF CONTROLS */}
             <div className="grid grid-cols-2 gap-4">
+
+              {/* ARTICLE CATEGORY */}
+              <div className="space-y-1.5 col-span-2">
+                <label className="text-[11px] font-mono font-bold text-slate-400 uppercase">Article Category</label>
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:border-indigo-500"
+                >
+                  <option value="All-Purpose / Auto-Detect">All-Purpose / Auto-Detect (Let AI Choose)</option>
+                  <option value="Artificial Intelligence">Artificial Intelligence</option>
+                  <option value="Cyber Security">Cyber Security</option>
+                  <option value="Programming">Programming</option>
+                  <option value="Web Development">Web Development</option>
+                  <option value="WordPress">WordPress</option>
+                  <option value="SEO">SEO</option>
+                  <option value="Digital Marketing">Digital Marketing</option>
+                  <option value="Startup">Startup</option>
+                  <option value="Nepal News">Nepal News</option>
+                  <option value="World News">World News</option>
+                  <option value="Opinion">Opinion</option>
+                  <option value="Tutorials">Tutorials</option>
+                  <option value="Health & Wellness">Health & Wellness</option>
+                  <option value="Education">Education</option>
+                  <option value="Business & Finance">Business & Finance</option>
+                  <option value="Lifestyle">Lifestyle</option>
+                  <option value="Sports & Fitness">Sports & Fitness</option>
+                  <option value="General News">General News</option>
+                  <option value="Travel & Tourism">Travel & Tourism</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Science & Technology">Science & Technology</option>
+                  <option value="Agriculture & Farming">Agriculture & Farming</option>
+                  <option value="Food & Recipes">Food & Recipes</option>
+                </select>
+              </div>
               
               {/* MODEL */}
               <div className="space-y-1.5">

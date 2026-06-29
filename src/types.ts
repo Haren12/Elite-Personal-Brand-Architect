@@ -48,7 +48,7 @@ export interface NewsItem {
   };
   featuredImage: string;
   videoUrl?: string;
-  category: 'Artificial Intelligence' | 'Cyber Security' | 'Programming' | 'Web Development' | 'WordPress' | 'SEO' | 'Digital Marketing' | 'Startup' | 'Nepal News' | 'World News' | 'Opinion' | 'Tutorials';
+  category: 'Artificial Intelligence' | 'Cyber Security' | 'Programming' | 'Web Development' | 'WordPress' | 'SEO' | 'Digital Marketing' | 'Startup' | 'Nepal News' | 'World News' | 'Opinion' | 'Tutorials' | 'Health & Wellness' | 'Education' | 'Business & Finance' | 'Lifestyle' | 'Sports & Fitness' | 'General News' | 'Travel & Tourism' | 'Entertainment' | 'Science & Technology' | 'Agriculture & Farming' | 'Food & Recipes' | string;
   tags: string[];
   publishedAt: string;
   isBreaking: boolean;

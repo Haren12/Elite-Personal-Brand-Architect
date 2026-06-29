@@ -207,6 +207,7 @@ app.use(express.json());
     try {
       const {
         topic,
+        category = '',
         mode = 'standard',
         lang = 'en',
         additionalInstructions = '',
@@ -239,6 +240,7 @@ app.use(express.json());
 - Digital Marketing Expert
 
 Your task is to write a comprehensive, high-quality, technically flawless, original, and deeply helpful article on: "${topic}".
+${category && category !== 'All-Purpose / Auto-Detect' ? `You MUST categorize this article as: "${category}".` : ''}
 
 --- Article Requirements ---
 1. MODE: ${mode}
@@ -289,7 +291,7 @@ Your task is to write a comprehensive, high-quality, technically flawless, origi
               },
               category: {
                 type: Type.STRING,
-                description: 'The most relevant technology category (e.g., Artificial Intelligence, Programming, SEO, WordPress, Web Development).'
+                description: 'The category of the article. If a specific category was requested, output that category exactly (e.g. Health & Wellness, News & Media, Education, Business & Finance, Lifestyle, Sports & Fitness, Food & Recipes, Travel & Tourism, Entertainment, Science & Technology, Agriculture & Farming, Artificial Intelligence, WordPress, Cyber Security, etc.).'
               },
               tags: {
                 type: Type.ARRAY,
