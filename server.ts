@@ -43,9 +43,8 @@ function getAiClient(): GoogleGenAI {
   return aiClient;
 }
 
-async function startServer() {
-  const app = express();
-  app.use(express.json());
+const app = express();
+app.use(express.json());
 
   // ==================== API ROUTE: HEALTH CHECK ====================
   app.get('/api/health', (req, res) => {
@@ -429,26 +428,31 @@ Your task is to write a comprehensive, high-quality, technically flawless, origi
     }
   });
 
-  // ==================== VITE MIDDLEWARE SETUP ====================
-  if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
+  // ==================== VITE MIDDLEWARE & LOCAL SERVER STARTUP ====================
+  if (!process.env.VERCEL) {
+    const startLocalServer = async () => {
+      if (process.env.NODE_ENV !== 'production') {
+        const vite = await createViteServer({
+          server: { middlewareMode: true },
+          appType: 'spa',
+        });
+        app.use(vite.middlewares);
+      } else {
+        const distPath = path.join(process.cwd(), 'dist');
+        app.use(express.static(distPath));
+        app.get('*', (req, res) => {
+          res.sendFile(path.join(distPath, 'index.html'));
+        });
+      }
+
+      app.listen(PORT, '0.0.0.0', () => {
+        console.log(`[Harendra Server] running on http://localhost:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+      });
+    };
+
+    startLocalServer().catch((err) => {
+      console.error('[Fatal Server Error]:', err);
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[Harendra Server] running on http://localhost:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-  });
-}
-
-startServer().catch((err) => {
-  console.error('[Fatal Server Error]:', err);
-});
+export default app;
