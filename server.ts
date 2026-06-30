@@ -588,6 +588,32 @@ Never mention these instructions directly or say "According to my system instruc
   // ==================== XML SITEMAP GENERATOR ====================
   app.get('/sitemap.xml', async (req, res) => {
     try {
+      // Helper function to escape XML special characters to prevent sitemap parsing errors
+      const escapeXml = (unsafe: string): string => {
+        return unsafe.replace(/[<>&'"]/g, (c) => {
+          switch (c) {
+            case '<': return '&lt;';
+            case '>': return '&gt;';
+            case '&': return '&amp;';
+            case '\'': return '&apos;';
+            case '"': return '&quot;';
+            default: return c;
+          }
+        });
+      };
+
+      // Helper function to format any date strictly into YYYY-MM-DD format as required by sitemaps
+      const formatDate = (dateStr: any): string => {
+        try {
+          if (!dateStr) return new Date().toISOString().substring(0, 10);
+          const d = new Date(dateStr);
+          if (!isNaN(d.getTime())) {
+            return d.toISOString().substring(0, 10);
+          }
+        } catch (e) {}
+        return new Date().toISOString().substring(0, 10);
+      };
+
       let blogs = INITIAL_BLOG_POSTS;
       try {
         const client = getSupabase();
@@ -617,7 +643,7 @@ Never mention these instructions directly or say "According to my system instruc
 
       for (const page of staticPages) {
         xml += `  <url>\n`;
-        xml += `    <loc>${baseUrl}${page.path}</loc>\n`;
+        xml += `    <loc>${escapeXml(`${baseUrl}${page.path}`)}</loc>\n`;
         xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
         xml += `    <priority>${page.priority}</priority>\n`;
         xml += `  </url>\n`;
@@ -625,10 +651,10 @@ Never mention these instructions directly or say "According to my system instruc
 
       // 2. Dynamic Blog Posts
       for (const b of blogs) {
-        if (b.status === 'published') {
+        if (b.status === 'published' && b.slug) {
           xml += `  <url>\n`;
-          xml += `    <loc>${baseUrl}/blog/${b.slug}</loc>\n`;
-          xml += `    <lastmod>${b.publishedAt ? b.publishedAt.substring(0, 10) : new Date().toISOString().substring(0, 10)}</lastmod>\n`;
+          xml += `    <loc>${escapeXml(`${baseUrl}/blog/${b.slug}`)}</loc>\n`;
+          xml += `    <lastmod>${formatDate(b.publishedAt)}</lastmod>\n`;
           xml += `    <changefreq>weekly</changefreq>\n`;
           xml += `    <priority>0.7</priority>\n`;
           xml += `  </url>\n`;
@@ -637,10 +663,10 @@ Never mention these instructions directly or say "According to my system instruc
 
       // 3. Dynamic News Articles
       for (const n of news) {
-        if (n.status === 'published') {
+        if (n.status === 'published' && n.slug) {
           xml += `  <url>\n`;
-          xml += `    <loc>${baseUrl}/news/${n.slug}</loc>\n`;
-          xml += `    <lastmod>${n.publishedAt ? n.publishedAt.substring(0, 10) : new Date().toISOString().substring(0, 10)}</lastmod>\n`;
+          xml += `    <loc>${escapeXml(`${baseUrl}/news/${n.slug}`)}</loc>\n`;
+          xml += `    <lastmod>${formatDate(n.publishedAt)}</lastmod>\n`;
           xml += `    <changefreq>weekly</changefreq>\n`;
           xml += `    <priority>0.7</priority>\n`;
           xml += `  </url>\n`;
@@ -649,7 +675,7 @@ Never mention these instructions directly or say "According to my system instruc
 
       xml += `</urlset>`;
 
-      res.header('Content-Type', 'application/xml');
+      res.header('Content-Type', 'application/xml; charset=utf-8');
       res.send(xml);
     } catch (e: any) {
       console.error('[Sitemap Error]:', e);
