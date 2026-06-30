@@ -9,6 +9,7 @@ import { motion } from 'motion/react';
 import { NewsItem } from '../types';
 import { CustomMarkdown } from './BlogView';
 import { getNewsArticleSchema } from '../utils/seo';
+import ShareMenu from './ShareMenu';
 
 interface NewsViewProps {
   news: NewsItem[];
@@ -136,17 +137,24 @@ export default function NewsView({ news, lang, setView }: NewsViewProps) {
           </button>
 
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded bg-rose-600 px-2.5 py-1 text-xs font-bold text-white uppercase font-sans">
-                {selectedNews.category}
-              </span>
-              <div className="flex items-center text-xs text-slate-400 space-x-3 font-mono">
-                <span>By {selectedNews.author}</span>
-                <span>•</span>
-                <span>{new Date(selectedNews.publishedAt).toLocaleDateString()}</span>
-                <span>•</span>
-                <span>{selectedNews.views} Views</span>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="rounded bg-rose-600 px-2.5 py-1 text-xs font-bold text-white uppercase font-sans">
+                  {selectedNews.category}
+                </span>
+                <div className="flex items-center text-xs text-slate-400 space-x-3 font-mono">
+                  <span>By {selectedNews.author}</span>
+                  <span>•</span>
+                  <span>{new Date(selectedNews.publishedAt).toLocaleDateString()}</span>
+                  <span>•</span>
+                  <span>{selectedNews.views} Views</span>
+                </div>
               </div>
+              <ShareMenu
+                title={lang === 'ne' ? selectedNews.translations.ne.title : selectedNews.translations.en.title}
+                url={`https://harendralamsal.name.np/news/${selectedNews.slug}`}
+                lang={lang}
+              />
             </div>
 
             <h1 id="news-title" className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl" style={{ fontFamily: '"Space Grotesk", sans-serif' }}>

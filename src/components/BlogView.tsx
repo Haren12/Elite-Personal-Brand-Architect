@@ -8,6 +8,7 @@ import { Search, Calendar, Clock, BookOpen, Tag, ArrowLeft, Play, LayoutGrid, Aw
 import { motion } from 'motion/react';
 import { BlogPost } from '../types';
 import { getBlogPostingSchema } from '../utils/seo';
+import ShareMenu from './ShareMenu';
 
 interface BlogViewProps {
   posts: BlogPost[];
@@ -189,20 +190,27 @@ export default function BlogView({ posts, lang, setView }: BlogViewProps) {
 
           {/* Heading */}
           <div className="space-y-4 text-left">
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="rounded-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 px-3 py-1 text-xs font-semibold">
-                {selectedPost.categories[0]}
-              </span>
-              <div className="flex items-center text-xs text-slate-400 space-x-3 font-mono">
-                <span className="flex items-center space-x-1">
-                  <Calendar size={12} />
-                  <span>{new Date(selectedPost.publishedAt).toLocaleDateString()}</span>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="rounded-full bg-indigo-600/20 text-indigo-400 border border-indigo-500/20 px-3 py-1 text-xs font-semibold">
+                  {selectedPost.categories[0]}
                 </span>
-                <span className="flex items-center space-x-1">
-                  <Clock size={12} />
-                  <span>{selectedPost.readingTimeMin} Min Read</span>
-                </span>
+                <div className="flex items-center text-xs text-slate-400 space-x-3 font-mono">
+                  <span className="flex items-center space-x-1">
+                    <Calendar size={12} />
+                    <span>{new Date(selectedPost.publishedAt).toLocaleDateString()}</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Clock size={12} />
+                    <span>{selectedPost.readingTimeMin} Min Read</span>
+                  </span>
+                </div>
               </div>
+              <ShareMenu
+                title={lang === 'ne' ? selectedPost.translations.ne.title : selectedPost.translations.en.title}
+                url={`https://harendralamsal.name.np/blog/${selectedPost.slug}`}
+                lang={lang}
+              />
             </div>
 
             <h1 id="post-title" className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl" style={{ fontFamily: '"Space Grotesk", sans-serif' }}>
