@@ -82,6 +82,62 @@ function saveNewsData(data: any) {
 const app = express();
 app.use(express.json());
 
+// ==================== SECURITY HEADERS & CORS MIDDLEWARE ====================
+app.use((req, res, next) => {
+  // CORS Configuration
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Security Headers for Production Compliance
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // Note: Frame options are set to allow embedding within the AI Studio development panel
+  res.setHeader('X-Frame-Options', 'ALLOWALL');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
+// ==================== MEMORY-BASED RATE LIMITER FOR GEMINI ENDPOINTS ====================
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 30; // Max 30 requests per IP per minute for Gemini proxy calls
+
+function geminiRateLimiter(req: any, res: any, next: any) {
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + LIMIT_WINDOW_MS });
+    return next();
+  }
+
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + LIMIT_WINDOW_MS;
+    return next();
+  }
+
+  record.count++;
+  if (record.count > MAX_REQUESTS_PER_WINDOW) {
+    res.setHeader('Retry-After', Math.ceil((record.resetTime - now) / 1000));
+    return res.status(429).json({
+      error: 'Rate limit exceeded. You are making too many queries to the Gemini AI API. Please wait a minute and try again.'
+    });
+  }
+
+  next();
+}
+
+// Apply rate limiter specifically to costly AI endpoints
+app.use('/api/gemini/*', geminiRateLimiter);
+
   // ==================== API ROUTE: HEALTH CHECK ====================
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', serverTime: new Date().toISOString() });
