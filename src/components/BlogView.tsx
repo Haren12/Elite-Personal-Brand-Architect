@@ -14,6 +14,8 @@ interface BlogViewProps {
   posts: BlogPost[];
   lang: 'en' | 'ne';
   setView: (view: 'home' | 'blog' | 'news' | 'contact' | 'admin') => void;
+  activeSlug?: string | null;
+  onSelectSlug?: (slug: string | null) => void;
 }
 
 // Inline Custom Markdown Parser to avoid dependency weight, fully styled with Tailwind CSS
@@ -110,8 +112,12 @@ export function CustomMarkdown({ content }: { content: string }) {
   return <div className="space-y-1 select-text">{renderedElements}</div>;
 }
 
-export default function BlogView({ posts, lang, setView }: BlogViewProps) {
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null);
+export default function BlogView({ posts, lang, setView, activeSlug, onSelectSlug }: BlogViewProps) {
+  const selectedPost = useMemo(() => {
+    if (!activeSlug) return null;
+    return posts.find((p) => p.slug === activeSlug) || null;
+  }, [posts, activeSlug]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -157,12 +163,21 @@ export default function BlogView({ posts, lang, setView }: BlogViewProps) {
   }, [posts]);
 
   const handlePostClick = (post: BlogPost) => {
-    setSelectedPost(post);
+    if (onSelectSlug) {
+      onSelectSlug(post.slug);
+    } else {
+      window.history.pushState(null, '', `/blog/${post.slug}`);
+      // Fallback update in case onSelectSlug is missing (e.g. from secondary files)
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackToGrid = () => {
-    setSelectedPost(null);
+    if (onSelectSlug) {
+      onSelectSlug(null);
+    } else {
+      window.history.pushState(null, '', '/blog');
+    }
   };
 
   return (

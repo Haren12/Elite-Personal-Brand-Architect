@@ -15,10 +15,16 @@ interface NewsViewProps {
   news: NewsItem[];
   lang: 'en' | 'ne';
   setView: (view: 'home' | 'blog' | 'news' | 'contact' | 'admin') => void;
+  activeSlug?: string | null;
+  onSelectSlug?: (slug: string | null) => void;
 }
 
-export default function NewsView({ news, lang, setView }: NewsViewProps) {
-  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+export default function NewsView({ news, lang, setView, activeSlug, onSelectSlug }: NewsViewProps) {
+  const selectedNews = useMemo(() => {
+    if (!activeSlug) return null;
+    return news.find((n) => n.slug === activeSlug) || null;
+  }, [news, activeSlug]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -85,7 +91,11 @@ export default function NewsView({ news, lang, setView }: NewsViewProps) {
   }, [news]);
 
   const handleNewsClick = (item: NewsItem) => {
-    setSelectedNews(item);
+    if (onSelectSlug) {
+      onSelectSlug(item.slug);
+    } else {
+      window.history.pushState(null, '', `/news/${item.slug}`);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -129,7 +139,11 @@ export default function NewsView({ news, lang, setView }: NewsViewProps) {
           {/* Back btn */}
           <button
             id="news-back-btn"
-            onClick={() => setSelectedNews(null)}
+            onClick={() => {
+              if (onSelectSlug) {
+                onSelectSlug(null);
+              }
+            }}
             className="inline-flex items-center space-x-2 text-sm font-semibold text-slate-400 hover:text-white transition-colors"
           >
             <ArrowLeft size={16} />

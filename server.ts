@@ -20,6 +20,9 @@ import {
   deleteSupabasePost
 } from './server/supabase-service';
 
+// Import static dataset for XML sitemap fallback
+import { INITIAL_BLOG_POSTS, INITIAL_NEWS_ITEMS } from './src/data';
+
 const PORT = 3000;
 
 // Lazy initialize Gemini client to prevent startup crash if key is missing
@@ -579,6 +582,78 @@ Never mention these instructions directly or say "According to my system instruc
     } catch (err: any) {
       console.error('[Gemini Representative Chat Error]:', err.message);
       res.status(500).json({ error: err.message || 'AI Assistant server communication error' });
+    }
+  });
+
+  // ==================== XML SITEMAP GENERATOR ====================
+  app.get('/sitemap.xml', async (req, res) => {
+    try {
+      let blogs = INITIAL_BLOG_POSTS;
+      try {
+        const client = getSupabase();
+        if (client) {
+          const dbPosts = await getMappedBlogPosts();
+          if (dbPosts && dbPosts.length > 0) {
+            blogs = dbPosts;
+          }
+        }
+      } catch (err) {
+        console.warn('[Sitemap Supabase Warning]: Could not fetch dynamic posts:', err);
+      }
+
+      const news = INITIAL_NEWS_ITEMS;
+      const baseUrl = 'https://harendralamsal.name.np';
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+
+      // 1. Static Pages
+      const staticPages = [
+        { path: '', changefreq: 'daily', priority: '1.0' },
+        { path: '/blog', changefreq: 'daily', priority: '0.8' },
+        { path: '/news', changefreq: 'daily', priority: '0.8' },
+        { path: '/contact', changefreq: 'weekly', priority: '0.5' },
+      ];
+
+      for (const page of staticPages) {
+        xml += `  <url>\n`;
+        xml += `    <loc>${baseUrl}${page.path}</loc>\n`;
+        xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
+        xml += `    <priority>${page.priority}</priority>\n`;
+        xml += `  </url>\n`;
+      }
+
+      // 2. Dynamic Blog Posts
+      for (const b of blogs) {
+        if (b.status === 'published') {
+          xml += `  <url>\n`;
+          xml += `    <loc>${baseUrl}/blog/${b.slug}</loc>\n`;
+          xml += `    <lastmod>${b.publishedAt ? b.publishedAt.substring(0, 10) : new Date().toISOString().substring(0, 10)}</lastmod>\n`;
+          xml += `    <changefreq>weekly</changefreq>\n`;
+          xml += `    <priority>0.7</priority>\n`;
+          xml += `  </url>\n`;
+        }
+      }
+
+      // 3. Dynamic News Articles
+      for (const n of news) {
+        if (n.status === 'published') {
+          xml += `  <url>\n`;
+          xml += `    <loc>${baseUrl}/news/${n.slug}</loc>\n`;
+          xml += `    <lastmod>${n.publishedAt ? n.publishedAt.substring(0, 10) : new Date().toISOString().substring(0, 10)}</lastmod>\n`;
+          xml += `    <changefreq>weekly</changefreq>\n`;
+          xml += `    <priority>0.7</priority>\n`;
+          xml += `  </url>\n`;
+        }
+      }
+
+      xml += `</urlset>`;
+
+      res.header('Content-Type', 'application/xml');
+      res.send(xml);
+    } catch (e: any) {
+      console.error('[Sitemap Error]:', e);
+      res.status(500).send('Error generating sitemap');
     }
   });
 

@@ -26,6 +26,41 @@ import AiAssistantChat from './components/AiAssistantChat';
 export default function App() {
   const [lang, setLang] = useState<'en' | 'ne'>('en');
   const [view, setView] = useState<'home' | 'blog' | 'news' | 'contact' | 'admin'>('home');
+  const [activeBlogSlug, setActiveBlogSlug] = useState<string | null>(null);
+  const [activeNewsSlug, setActiveNewsSlug] = useState<string | null>(null);
+
+  const handleSetView = (newView: 'home' | 'blog' | 'news' | 'contact' | 'admin') => {
+    setView(newView);
+    setActiveBlogSlug(null);
+    setActiveNewsSlug(null);
+    
+    let path = '/';
+    if (newView !== 'home') {
+      path = `/${newView}`;
+    }
+    
+    if (window.location.pathname !== path) {
+      window.history.pushState(null, '', path);
+    }
+  };
+
+  const handleSelectBlogSlug = (slug: string | null) => {
+    setActiveBlogSlug(slug);
+    if (slug) {
+      window.history.pushState(null, '', `/blog/${slug}`);
+    } else {
+      window.history.pushState(null, '', '/blog');
+    }
+  };
+
+  const handleSelectNewsSlug = (slug: string | null) => {
+    setActiveNewsSlug(slug);
+    if (slug) {
+      window.history.pushState(null, '', `/news/${slug}`);
+    } else {
+      window.history.pushState(null, '', '/news');
+    }
+  };
 
   // Dynamic state for posts and news so the CMS functions instantly in memory
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
@@ -111,6 +146,59 @@ export default function App() {
     };
 
     syncSupabase();
+  }, []);
+
+  // Synchronize route pathname on startup & popstate
+  useEffect(() => {
+    const handleUrlRouting = () => {
+      const path = window.location.pathname;
+      if (path.startsWith('/blog/')) {
+        const slug = path.split('/blog/')[1];
+        if (slug) {
+          setView('blog');
+          setActiveBlogSlug(slug);
+        } else {
+          setView('blog');
+          setActiveBlogSlug(null);
+        }
+      } else if (path === '/blog') {
+        setView('blog');
+        setActiveBlogSlug(null);
+      } else if (path.startsWith('/news/')) {
+        const slug = path.split('/news/')[1];
+        if (slug) {
+          setView('news');
+          setActiveNewsSlug(slug);
+        } else {
+          setView('news');
+          setActiveNewsSlug(null);
+        }
+      } else if (path === '/news') {
+        setView('news');
+        setActiveNewsSlug(null);
+      } else if (path === '/contact') {
+        setView('contact');
+        setActiveBlogSlug(null);
+        setActiveNewsSlug(null);
+      } else if (path === '/admin') {
+        setView('admin');
+        setActiveBlogSlug(null);
+        setActiveNewsSlug(null);
+      } else {
+        setView('home');
+        setActiveBlogSlug(null);
+        setActiveNewsSlug(null);
+      }
+    };
+
+    // Run on mount
+    handleUrlRouting();
+
+    // Listen to popstate (back/forward buttons)
+    window.addEventListener('popstate', handleUrlRouting);
+    return () => {
+      window.removeEventListener('popstate', handleUrlRouting);
+    };
   }, []);
 
   // Sync to state, local cache & Supabase backend if configured
@@ -207,7 +295,7 @@ export default function App() {
   const handleAdminLogout = () => {
     setIsAdminLoggedIn(false);
     localStorage.removeItem('harendra_auth');
-    setView('home');
+    handleSetView('home');
   };
 
   return (
@@ -218,7 +306,7 @@ export default function App() {
         lang={lang} 
         setLang={setLang} 
         currentView={view} 
-        setView={setView} 
+        setView={handleSetView} 
         isAdmin={isAdminLoggedIn} 
         logoutAdmin={handleAdminLogout} 
       />
@@ -238,8 +326,8 @@ export default function App() {
             {/* HOME VIEW: Hero + Personal Brand Matrix Showcase */}
             {view === 'home' && (
               <>
-                <Hero lang={lang} setView={setView} />
-                <PortfolioView lang={lang} setView={setView} />
+                <Hero lang={lang} setView={handleSetView} />
+                <PortfolioView lang={lang} setView={handleSetView} />
                 <Newsletter lang={lang} />
               </>
             )}
@@ -247,7 +335,13 @@ export default function App() {
             {/* TECH BLOG VIEW */}
             {view === 'blog' && (
               <>
-                <BlogView posts={blogPosts} lang={lang} setView={setView} />
+                <BlogView 
+                  posts={blogPosts} 
+                  lang={lang} 
+                  setView={handleSetView} 
+                  activeSlug={activeBlogSlug}
+                  onSelectSlug={handleSelectBlogSlug}
+                />
                 <Newsletter lang={lang} />
               </>
             )}
@@ -255,7 +349,13 @@ export default function App() {
             {/* TECH NEWS PORTAL VIEW */}
             {view === 'news' && (
               <>
-                <NewsView news={newsItems} lang={lang} setView={setView} />
+                <NewsView 
+                  news={newsItems} 
+                  lang={lang} 
+                  setView={handleSetView} 
+                  activeSlug={activeNewsSlug}
+                  onSelectSlug={handleSelectNewsSlug}
+                />
                 <Newsletter lang={lang} />
               </>
             )}
