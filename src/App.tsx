@@ -39,7 +39,7 @@ export default function App() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
-  const [showHint, setShowHint] = useState(false);
+
   const [adminPassword, setAdminPassword] = useState(() => {
     return localStorage.getItem('harendra_admin_password') || 'harendra123';
   });
@@ -364,33 +364,7 @@ export default function App() {
                           </div>
                         )}
 
-                        {/* Toggleable credentials hint to prevent exposing it directly */}
-                        <div className="space-y-2 pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setShowHint(!showHint)}
-                            className="text-xs font-mono text-indigo-400 hover:text-indigo-300 underline focus:outline-none transition-all cursor-pointer block"
-                          >
-                            {showHint ? 'Hide Sandbox Demo Credentials' : 'Show Sandbox Demo Credentials'}
-                          </button>
-                          
-                          {showHint && (
-                            <div className="p-3.5 rounded bg-slate-950 border border-slate-850 text-xs text-slate-400 leading-relaxed font-mono space-y-1">
-                              <span className="font-bold text-slate-200">DEMO CREDENTIALS:</span>
-                              <div className="block mt-1">
-                                <span className="text-slate-500">Email:</span> harendralamsal4140@gmail.com
-                              </div>
-                              <div>
-                                <span className="text-slate-500">Password:</span> <span className="text-emerald-400 font-bold">{adminPassword}</span>
-                              </div>
-                              {adminPassword !== 'harendra123' && (
-                                <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-900 mt-1">
-                                  Note: You have updated the default password. The new value is saved securely in your browser's LocalStorage.
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
+
 
                         <button
                           type="submit"

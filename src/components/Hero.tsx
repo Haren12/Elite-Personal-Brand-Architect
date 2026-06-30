@@ -110,16 +110,22 @@ export default function Hero({ lang, setView }: HeroProps) {
               className="pt-6 border-t border-slate-900 grid grid-cols-3 gap-4 text-left"
             >
               <div>
-                <div className="text-2xl md:text-3xl font-extrabold text-white">100%</div>
-                <div className="text-xs text-slate-400 font-mono tracking-wider uppercase mt-1">SEO Score</div>
+                <div className="text-2xl md:text-3xl font-extrabold text-white">100+</div>
+                <div className="text-xs text-slate-400 font-mono tracking-wider uppercase mt-1">
+                  {lang === 'ne' ? 'एसईओ सेवाहरू' : 'SEO Services'}
+                </div>
               </div>
               <div>
-                <div className="text-2xl md:text-3xl font-extrabold text-emerald-400">&lt;1s</div>
-                <div className="text-xs text-slate-400 font-mono tracking-wider uppercase mt-1">Page Speed</div>
+                <div className="text-2xl md:text-3xl font-extrabold text-emerald-400">Sub-1s</div>
+                <div className="text-xs text-slate-400 font-mono tracking-wider uppercase mt-1">
+                  {lang === 'ne' ? 'पेज स्पिड' : 'Page Speed'}
+                </div>
               </div>
               <div>
                 <div className="text-2xl md:text-3xl font-extrabold text-indigo-400">50+</div>
-                <div className="text-xs text-slate-400 font-mono tracking-wider uppercase mt-1">Clients Served</div>
+                <div className="text-xs text-slate-400 font-mono tracking-wider uppercase mt-1">
+                  {lang === 'ne' ? 'सन्तुष्ट ग्राहकहरू' : 'Clients Served'}
+                </div>
               </div>
             </motion.div>
           </div>
