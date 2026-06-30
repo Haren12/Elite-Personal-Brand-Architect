@@ -18,7 +18,8 @@ import {
   getSupabase,
   getMappedBlogPosts,
   insertMappedBlogPost,
-  deleteSupabasePost
+  deleteSupabasePost,
+  incrementSupabaseBlogView
 } from './server/supabase-service';
 
 // Import static dataset for XML sitemap fallback
@@ -175,6 +176,45 @@ app.use(express.json());
       res.json({ success: true, id });
     } catch (e: any) {
       res.status(500).json({ error: e.message || 'Failed to delete news' });
+    }
+  });
+
+  app.post('/api/news/:slug/view', (req, res) => {
+    try {
+      const { slug } = req.params;
+      const news = getNewsData();
+      let updated = false;
+      const nextNews = news.map((item: any) => {
+        if (item.slug === slug) {
+          updated = true;
+          return { ...item, views: (item.views || 0) + 1 };
+        }
+        return item;
+      });
+      if (updated) {
+        saveNewsData(nextNews);
+        const updatedItem = nextNews.find((item: any) => item.slug === slug);
+        res.json({ success: true, views: updatedItem.views });
+      } else {
+        res.status(404).json({ error: 'News article not found' });
+      }
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Failed to increment view' });
+    }
+  });
+
+  app.post('/api/supabase/blogs/:slug/view', async (req, res) => {
+    try {
+      const { slug } = req.params;
+      const client = getSupabase();
+      if (!client) {
+        return res.status(400).json({ error: 'Supabase not configured' });
+      }
+      const data = await incrementSupabaseBlogView(slug);
+      res.json({ success: true, data });
+    } catch (err: any) {
+      console.error('[Supabase View Increment Error]:', err.message);
+      res.status(500).json({ error: err.message || 'Failed to increment blog view in Supabase.' });
     }
   });
 
@@ -653,6 +693,12 @@ Never mention these instructions directly or say "According to my system instruc
       console.error('[Gemini Representative Chat Error]:', err.message);
       res.status(500).json({ error: err.message || 'AI Assistant server communication error' });
     }
+  });
+
+  // ==================== ROBOTS.TXT GENERATOR ====================
+  app.get('/robots.txt', (req, res) => {
+    res.type('text/plain');
+    res.send(`User-agent: *\nAllow: /\n\nSitemap: https://harendralamsal.name.np/sitemap.xml`);
   });
 
   // ==================== XML SITEMAP GENERATOR ====================

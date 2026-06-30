@@ -185,3 +185,37 @@ export async function deleteSupabasePost(id: string) {
   }
   return true;
 }
+
+export async function incrementSupabaseBlogView(slug: string) {
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
+  try {
+    const { data: post, error: fetchErr } = await supabase
+      .from('blog_posts')
+      .select('id, views_count')
+      .eq('slug', slug)
+      .single();
+
+    if (fetchErr || !post) {
+      console.warn(`[Supabase View Inc Warning]: Could not find post with slug ${slug}`);
+      return null;
+    }
+
+    const currentViews = post.views_count || 0;
+
+    const { data, error: updateErr } = await supabase
+      .from('blog_posts')
+      .update({ views_count: currentViews + 1 })
+      .eq('id', post.id)
+      .select()
+      .single();
+
+    if (updateErr) throw updateErr;
+    return data;
+  } catch (err) {
+    console.error(`Error incrementing views for post slug ${slug}:`, err);
+    return null;
+  }
+}
+

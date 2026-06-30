@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldAlert, LogIn, Mail, Lock, CheckCircle, Github, Linkedin, Twitter, Youtube } from 'lucide-react';
 
@@ -149,11 +149,43 @@ export default function App() {
       try {
         const newsRes = await fetch('/api/news');
         if (newsRes.ok) {
-          const newsData = await newsRes.json();
-          if (newsData && newsData.length > 0) {
-            setNewsItems(newsData);
-            localStorage.setItem('harendra_news', JSON.stringify(newsData));
+          const serverNews = await newsRes.json() as NewsItem[];
+          
+          // Retrieve what we currently have in localStorage (local draft/added posts)
+          const savedNewsStr = localStorage.getItem('harendra_news');
+          let mergedNews = [...serverNews];
+
+          if (savedNewsStr) {
+            try {
+              const localNews = JSON.parse(savedNewsStr) as NewsItem[];
+              // Find any item in localNews that does not exist in serverNews by id or slug
+              const missingOnServer = localNews.filter(
+                (localItem) => !serverNews.some((srvItem) => srvItem.id === localItem.id || srvItem.slug === localItem.slug)
+              );
+
+              if (missingOnServer.length > 0) {
+                // We have news items that only exist locally on this browser! Let's upload them to the server.
+                for (const item of missingOnServer) {
+                  try {
+                    await fetch('/api/news', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(item),
+                    });
+                  } catch (err) {
+                    console.error('[Sync News Item Error]:', err);
+                  }
+                }
+                // Combine local items to server items so the local ones are preserved in UI
+                mergedNews = [...missingOnServer, ...serverNews];
+              }
+            } catch (e) {
+              console.error('[Local News Parse Error]:', e);
+            }
           }
+
+          setNewsItems(mergedNews);
+          localStorage.setItem('harendra_news', JSON.stringify(mergedNews));
         }
       } catch (err) {
         console.warn('[News Server Fetch Warning]: Could not reach backend news API:', err);
@@ -303,6 +335,99 @@ export default function App() {
       console.warn('[News Sync Error]: Network issue during news deletion:', e);
     }
   };
+
+  const viewedSlugsRef = useRef<Set<string>>(new Set());
+
+  const incrementBlogView = async (slug: string) => {
+    setBlogPosts((prevPosts) => {
+      const updated = prevPosts.map((post) => {
+        if (post.slug === slug) {
+          return { ...post, views: (post.views || 0) + 1 };
+        }
+        return post;
+      });
+      localStorage.setItem('harendra_blogs', JSON.stringify(updated));
+      return updated;
+    });
+
+    if (supabaseConfigured) {
+      try {
+        const res = await fetch(`/api/supabase/blogs/${slug}/view`, {
+          method: 'POST',
+        });
+        if (res.ok) {
+          const resData = await res.json();
+          if (resData.success && resData.data) {
+            const backendViews = resData.data.views_count || resData.data.views || 0;
+            setBlogPosts((prevPosts) => {
+              const synced = prevPosts.map((post) => {
+                if (post.slug === slug && backendViews > (post.views || 0)) {
+                  return { ...post, views: backendViews };
+                }
+                return post;
+              });
+              localStorage.setItem('harendra_blogs', JSON.stringify(synced));
+              return synced;
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('[Blog View Sync Error]:', e);
+      }
+    }
+  };
+
+  const incrementNewsView = async (slug: string) => {
+    setNewsItems((prevNews) => {
+      const updated = prevNews.map((item) => {
+        if (item.slug === slug) {
+          return { ...item, views: (item.views || 0) + 1 };
+        }
+        return item;
+      });
+      localStorage.setItem('harendra_news', JSON.stringify(updated));
+      return updated;
+    });
+
+    try {
+      const res = await fetch(`/api/news/${slug}/view`, {
+        method: 'POST',
+      });
+      if (res.ok) {
+        const resData = await res.json();
+        if (resData.success && typeof resData.views === 'number') {
+          const backendViews = resData.views;
+          setNewsItems((prevNews) => {
+            const synced = prevNews.map((item) => {
+              if (item.slug === slug && backendViews > (item.views || 0)) {
+                return { ...item, views: backendViews };
+              }
+              return item;
+            });
+            localStorage.setItem('harendra_news', JSON.stringify(synced));
+            return synced;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[News View Sync Error]:', e);
+    }
+  };
+
+  // Automatically increment view counts when activeBlogSlug or activeNewsSlug changes
+  useEffect(() => {
+    if (activeBlogSlug && !viewedSlugsRef.current.has(`blog_${activeBlogSlug}`)) {
+      viewedSlugsRef.current.add(`blog_${activeBlogSlug}`);
+      incrementBlogView(activeBlogSlug);
+    }
+  }, [activeBlogSlug]);
+
+  useEffect(() => {
+    if (activeNewsSlug && !viewedSlugsRef.current.has(`news_${activeNewsSlug}`)) {
+      viewedSlugsRef.current.add(`news_${activeNewsSlug}`);
+      incrementNewsView(activeNewsSlug);
+    }
+  }, [activeNewsSlug]);
 
   const importBackup = (backup: { posts: BlogPost[]; news: NewsItem[] }) => {
     if (backup.posts) {

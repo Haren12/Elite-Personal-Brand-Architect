@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useMemo } from 'react';
 import { 
   BarChart3, 
   BookOpen, 
@@ -112,7 +112,34 @@ export default function AdminDashboard({
   const [newImageUrl, setNewImageUrl] = useState('');
 
   // Analytics
-  const [analytics, setAnalytics] = useState<AnalyticsData>(INITIAL_ANALYTICS);
+  const analytics = useMemo(() => {
+    const totalBlogViews = posts.reduce((sum, p) => sum + (p.views || 0), 0);
+    const totalNewsViews = news.reduce((sum, n) => sum + (n.views || 0), 0);
+    const calculatedViewsCount = totalBlogViews + totalNewsViews;
+
+    const allItems = [
+      ...posts.map(p => ({
+        title: p.translations.en.title || p.translations.ne.title,
+        views: p.views || 0,
+        type: 'blog' as const
+      })),
+      ...news.map(n => ({
+        title: n.translations.en.title || n.translations.ne.title,
+        views: n.views || 0,
+        type: 'news' as const
+      }))
+    ];
+    
+    const popularPosts = allItems
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 4);
+
+    return {
+      ...INITIAL_ANALYTICS,
+      viewsCount: calculatedViewsCount > 0 ? calculatedViewsCount : INITIAL_ANALYTICS.viewsCount,
+      popularPosts: popularPosts.length > 0 ? popularPosts : INITIAL_ANALYTICS.popularPosts
+    };
+  }, [posts, news]);
 
   // Gemini AI automatic translation integration (Full stack proxy endpoint)
   const handleAiTranslate = async (type: 'blog' | 'news') => {
