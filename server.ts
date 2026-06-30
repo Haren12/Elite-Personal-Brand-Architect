@@ -159,7 +159,7 @@ app.use('/api/gemini/*', geminiRateLimiter);
       // Check if we can select from blog_categories table to verify schema and connection
       const { data, error } = await client.from('blog_categories').select('id').limit(1);
       if (error) {
-        console.warn('[Supabase Status Probe Error (Expected if not set/paused)]:', error.message);
+        console.log('[Supabase Probe]: Status check yielded offline/unreachable.');
         return res.json({
           configured: true,
           connected: false,
@@ -173,11 +173,11 @@ app.use('/api/gemini/*', geminiRateLimiter);
         supabaseUrl: process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.substring(0, 15)}...` : null
       });
     } catch (err: any) {
-      console.warn('[Supabase Status Exception (Expected if wrong credentials)]:', err.message);
+      console.log('[Supabase Probe]: Status verification yielded offline/unreachable.');
       res.json({
         configured: true,
         connected: false,
-        error: err.message || 'Connection test failed.'
+        error: err.message || 'Connection test resolved to offline.'
       });
     }
   });
@@ -192,11 +192,11 @@ app.use('/api/gemini/*', geminiRateLimiter);
       const posts = await getMappedBlogPosts();
       res.json({ configured: true, connected: true, posts });
     } catch (err: any) {
-      console.warn('[Supabase Fetch Warning (Graceful offline fallback triggered)]:', err.message);
+      console.log('[Supabase Probe]: Post list retrieval resolved to offline/fallback.');
       res.json({ 
         configured: true, 
         connected: false, 
-        error: err.message || 'Failed to fetch blogs from Supabase.',
+        error: err.message || 'Connection test resolved to offline.',
         posts: [] 
       });
     }

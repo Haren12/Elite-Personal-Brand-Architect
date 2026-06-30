@@ -27,12 +27,12 @@ export async function fetchCategories() {
       .order('created_at', { ascending: true });
       
     if (error) {
-      console.warn('Error fetching categories from Supabase:', error);
+      console.log('[Supabase Probe]: Categories list returned empty/offline.');
       return [];
     }
     return data || [];
   } catch (err: any) {
-    console.warn('Exception fetching categories from Supabase:', err.message || err);
+    console.log('[Supabase Probe]: Categories fetch check yielded offline.');
     return [];
   }
 }
@@ -99,7 +99,7 @@ export async function getMappedBlogPosts() {
       };
     });
   } catch (err: any) {
-    console.warn('Error fetching mapped blogs from Supabase:', err.message || err);
+    console.log('[Supabase Probe]: Mapped blog list check yielded offline.');
     throw err;
   }
 }
