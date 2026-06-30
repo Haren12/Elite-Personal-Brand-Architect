@@ -145,7 +145,23 @@ export default function App() {
       }
     };
 
+    const fetchNews = async () => {
+      try {
+        const newsRes = await fetch('/api/news');
+        if (newsRes.ok) {
+          const newsData = await newsRes.json();
+          if (newsData && newsData.length > 0) {
+            setNewsItems(newsData);
+            localStorage.setItem('harendra_news', JSON.stringify(newsData));
+          }
+        }
+      } catch (err) {
+        console.warn('[News Server Fetch Warning]: Could not reach backend news API:', err);
+      }
+    };
+
     syncSupabase();
+    fetchNews();
   }, []);
 
   // Synchronize route pathname on startup & popstate
@@ -250,16 +266,42 @@ export default function App() {
     }
   };
 
-  const addNewsItem = (newItem: NewsItem) => {
+  const addNewsItem = async (newItem: NewsItem) => {
     const updated = [newItem, ...newsItems];
     setNewsItems(updated);
     localStorage.setItem('harendra_news', JSON.stringify(updated));
+
+    // Persist to backend server database so other users see it!
+    try {
+      const res = await fetch('/api/news', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem)
+      });
+      if (!res.ok) {
+        console.warn('[News Sync Error]: Server returned non-OK status for news insertion.');
+      }
+    } catch (e) {
+      console.warn('[News Sync Error]: Network issue during news insertion:', e);
+    }
   };
 
-  const deleteNewsItem = (id: string) => {
+  const deleteNewsItem = async (id: string) => {
     const updated = newsItems.filter((n) => n.id !== id);
     setNewsItems(updated);
     localStorage.setItem('harendra_news', JSON.stringify(updated));
+
+    // Delete from backend server database
+    try {
+      const res = await fetch(`/api/news/${id}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) {
+        console.warn('[News Sync Error]: Server returned non-OK status for news deletion.');
+      }
+    } catch (e) {
+      console.warn('[News Sync Error]: Network issue during news deletion:', e);
+    }
   };
 
   const importBackup = (backup: { posts: BlogPost[]; news: NewsItem[] }) => {

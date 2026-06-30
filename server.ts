@@ -5,6 +5,7 @@
 
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import dotenv from 'dotenv';
@@ -44,6 +45,37 @@ function getAiClient(): GoogleGenAI {
     });
   }
   return aiClient;
+}
+
+const NEWS_FILE_PATH = path.join(process.cwd(), 'news_data.json');
+
+function getNewsData() {
+  try {
+    if (fs.existsSync(NEWS_FILE_PATH)) {
+      const content = fs.readFileSync(NEWS_FILE_PATH, 'utf-8');
+      return JSON.parse(content);
+    }
+  } catch (err) {
+    console.error('[News File Read Error]:', err);
+  }
+  
+  // Create file if it doesn't exist or is corrupt
+  try {
+    fs.writeFileSync(NEWS_FILE_PATH, JSON.stringify(INITIAL_NEWS_ITEMS, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('[News File Write Init Error]:', err);
+  }
+  return INITIAL_NEWS_ITEMS;
+}
+
+function saveNewsData(data: any) {
+  try {
+    fs.writeFileSync(NEWS_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+    return true;
+  } catch (err) {
+    console.error('[News File Write Error]:', err);
+    return false;
+  }
 }
 
 const app = express();
@@ -105,6 +137,44 @@ app.use(express.json());
     } catch (err: any) {
       console.error('[Supabase Delete Error]:', err.message);
       res.status(500).json({ error: err.message || 'Failed to delete blog post from Supabase.' });
+    }
+  });
+
+  // ==================== API ROUTES: PERSISTENT NEWS BULLETIN OPERATIONS ====================
+  app.get('/api/news', (req, res) => {
+    try {
+      const news = getNewsData();
+      res.json(news);
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Failed to fetch news' });
+    }
+  });
+
+  app.post('/api/news', (req, res) => {
+    try {
+      const newItem = req.body;
+      if (!newItem || !newItem.id || !newItem.slug) {
+        return res.status(400).json({ error: 'Invalid news article data' });
+      }
+      const news = getNewsData();
+      const filtered = news.filter((item: any) => item.id !== newItem.id);
+      const updated = [newItem, ...filtered];
+      saveNewsData(updated);
+      res.json({ success: true, data: newItem });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Failed to save news' });
+    }
+  });
+
+  app.delete('/api/news/:id', (req, res) => {
+    try {
+      const { id } = req.params;
+      const news = getNewsData();
+      const updated = news.filter((item: any) => item.id !== id);
+      saveNewsData(updated);
+      res.json({ success: true, id });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message || 'Failed to delete news' });
     }
   });
 
@@ -627,7 +697,7 @@ Never mention these instructions directly or say "According to my system instruc
         console.warn('[Sitemap Supabase Warning]: Could not fetch dynamic posts:', err);
       }
 
-      const news = INITIAL_NEWS_ITEMS;
+      const news = getNewsData();
       const baseUrl = 'https://harendralamsal.name.np';
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
