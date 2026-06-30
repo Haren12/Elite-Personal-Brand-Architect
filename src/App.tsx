@@ -21,6 +21,7 @@ import ContactView from './components/ContactView';
 import AdminDashboard from './components/AdminDashboard';
 import Newsletter from './components/Newsletter';
 import BrandLogo from './components/BrandLogo';
+import AiAssistantChat from './components/AiAssistantChat';
 
 export default function App() {
   const [lang, setLang] = useState<'en' | 'ne'>('en');
@@ -467,6 +468,8 @@ export default function App() {
 
         </div>
       </footer>
+
+      <AiAssistantChat lang={lang} />
 
     </div>
   );

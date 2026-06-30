@@ -88,7 +88,7 @@ export default function AiArticleArchitect({
   // Input fields
   const [topic, setTopic] = useState('');
   const [mode, setMode] = useState<'news' | 'tutorial' | 'comparison' | 'standard'>('standard');
-  const [targetLang, setTargetLang] = useState<'en' | 'ne' | 'bilingual'>('bilingual');
+  const [targetLang, setTargetLang] = useState<'en' | 'ne' | 'bilingual'>('en');
   const [model, setModel] = useState<'gemini-3.5-flash' | 'gemini-3.1-pro-preview'>('gemini-3.5-flash');
   const [difficulty, setDifficulty] = useState('Intermediate');
   const [targetAudience, setTargetAudience] = useState('Developers & Software Architects');
