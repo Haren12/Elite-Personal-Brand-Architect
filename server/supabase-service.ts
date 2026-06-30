@@ -20,16 +20,21 @@ export async function fetchCategories() {
   const supabase = getSupabase();
   if (!supabase) return [];
   
-  const { data, error } = await supabase
-    .from('blog_categories')
-    .select('*')
-    .order('created_at', { ascending: true });
-    
-  if (error) {
-    console.error('Error fetching categories from Supabase:', error);
+  try {
+    const { data, error } = await supabase
+      .from('blog_categories')
+      .select('*')
+      .order('created_at', { ascending: true });
+      
+    if (error) {
+      console.warn('Error fetching categories from Supabase:', error);
+      return [];
+    }
+    return data || [];
+  } catch (err: any) {
+    console.warn('Exception fetching categories from Supabase:', err.message || err);
     return [];
   }
-  return data;
 }
 
 export async function getMappedBlogPosts() {
@@ -49,6 +54,7 @@ export async function getMappedBlogPosts() {
       .order('created_at', { ascending: false });
       
     if (error) throw error;
+    if (!posts) return [];
     
     return posts.map((post: any) => {
       const cat = catMap.get(post.category_id);
@@ -92,8 +98,8 @@ export async function getMappedBlogPosts() {
         commentsCount: 0
       };
     });
-  } catch (err) {
-    console.error('Error fetching mapped blogs from Supabase:', err);
+  } catch (err: any) {
+    console.warn('Error fetching mapped blogs from Supabase:', err.message || err);
     throw err;
   }
 }

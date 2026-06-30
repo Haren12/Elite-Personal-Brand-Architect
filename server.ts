@@ -144,12 +144,42 @@ app.use('/api/gemini/*', geminiRateLimiter);
   });
 
   // ==================== API ROUTE: SUPABASE INTEGRATION STATUS ====================
-  app.get('/api/supabase/status', (req, res) => {
+  app.get('/api/supabase/status', async (req, res) => {
     const isConfigured = !!(process.env.SUPABASE_URL && (process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY));
-    res.json({
-      configured: isConfigured,
-      supabaseUrl: process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.substring(0, 15)}...` : null
-    });
+    if (!isConfigured) {
+      return res.json({ configured: false, connected: false });
+    }
+
+    try {
+      const client = getSupabase();
+      if (!client) {
+        return res.json({ configured: true, connected: false, error: 'Supabase client failed to initialize with the configured secrets.' });
+      }
+
+      // Check if we can select from blog_categories table to verify schema and connection
+      const { data, error } = await client.from('blog_categories').select('id').limit(1);
+      if (error) {
+        console.warn('[Supabase Status Probe Error (Expected if not set/paused)]:', error.message);
+        return res.json({
+          configured: true,
+          connected: false,
+          error: `${error.message} (Code: ${error.code || 'UNKNOWN'})`
+        });
+      }
+
+      res.json({
+        configured: true,
+        connected: true,
+        supabaseUrl: process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.substring(0, 15)}...` : null
+      });
+    } catch (err: any) {
+      console.warn('[Supabase Status Exception (Expected if wrong credentials)]:', err.message);
+      res.json({
+        configured: true,
+        connected: false,
+        error: err.message || 'Connection test failed.'
+      });
+    }
   });
 
   // ==================== API ROUTES: SUPABASE BLOG OPERATIONS ====================
@@ -157,13 +187,18 @@ app.use('/api/gemini/*', geminiRateLimiter);
     try {
       const client = getSupabase();
       if (!client) {
-        return res.json({ configured: false, posts: [] });
+        return res.json({ configured: false, connected: false, posts: [] });
       }
       const posts = await getMappedBlogPosts();
-      res.json({ configured: true, posts });
+      res.json({ configured: true, connected: true, posts });
     } catch (err: any) {
-      console.error('[Supabase Fetch Error]:', err.message);
-      res.status(500).json({ error: err.message || 'Failed to fetch blogs from Supabase.' });
+      console.warn('[Supabase Fetch Warning (Graceful offline fallback triggered)]:', err.message);
+      res.json({ 
+        configured: true, 
+        connected: false, 
+        error: err.message || 'Failed to fetch blogs from Supabase.',
+        posts: [] 
+      });
     }
   });
 

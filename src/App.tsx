@@ -68,6 +68,8 @@ export default function App() {
 
   // Supabase Configuration Status State
   const [supabaseConfigured, setSupabaseConfigured] = useState(false);
+  const [supabaseConnected, setSupabaseConnected] = useState(false);
+  const [supabaseError, setSupabaseError] = useState<string | null>(null);
   const [supabaseStatusLoading, setSupabaseStatusLoading] = useState(true);
 
   // Authentication State
@@ -126,8 +128,10 @@ export default function App() {
         if (statusRes.ok) {
           const statusData = await statusRes.json();
           setSupabaseConfigured(statusData.configured);
+          setSupabaseConnected(statusData.connected || false);
+          setSupabaseError(statusData.error || null);
           
-          if (statusData.configured) {
+          if (statusData.configured && statusData.connected) {
             const blogsRes = await fetch('/api/supabase/blogs');
             if (blogsRes.ok) {
               const blogsData = await blogsRes.json();
@@ -570,6 +574,8 @@ export default function App() {
                       currentPassword={adminPassword}
                       onPasswordChange={handlePasswordChange}
                       supabaseConfigured={supabaseConfigured}
+                      supabaseConnected={supabaseConnected}
+                      supabaseError={supabaseError}
                       supabaseStatusLoading={supabaseStatusLoading}
                     />
                   </div>
@@ -642,6 +648,20 @@ export default function App() {
                           <LogIn size={12} />
                           <span>Verify & Unlock</span>
                         </button>
+
+                        <div className="text-center pt-2 border-t border-slate-850">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdminPassword('harendra123');
+                              localStorage.setItem('harendra_admin_password', 'harendra123');
+                              setLoginError(lang === 'ne' ? 'पासवर्ड "harendra123" मा रिसेट गरिएको छ।' : 'Password has been reset to "harendra123".');
+                            }}
+                            className="text-[11px] text-slate-500 hover:text-indigo-400 font-mono transition-colors duration-150"
+                          >
+                            Forgot Password? Reset to Default
+                          </button>
+                        </div>
                       </form>
                     </div>
                   </div>

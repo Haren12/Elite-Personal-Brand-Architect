@@ -42,6 +42,8 @@ interface AdminDashboardProps {
   currentPassword: string;
   onPasswordChange: (newPass: string) => void;
   supabaseConfigured?: boolean;
+  supabaseConnected?: boolean;
+  supabaseError?: string | null;
   supabaseStatusLoading?: boolean;
 }
 
@@ -56,6 +58,8 @@ export default function AdminDashboard({
   currentPassword,
   onPasswordChange,
   supabaseConfigured = false,
+  supabaseConnected = false,
+  supabaseError = null,
   supabaseStatusLoading = false,
 }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<'analytics' | 'ai-writer' | 'blog' | 'news' | 'seo' | 'media' | 'security'>('analytics');
@@ -600,10 +604,15 @@ export default function AdminDashboard({
                 </div>
                 {supabaseStatusLoading ? (
                   <span className="text-xs text-slate-500 font-mono animate-pulse">Scanning connection...</span>
-                ) : supabaseConfigured ? (
+                ) : supabaseConfigured && supabaseConnected ? (
                   <span className="rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-3 py-1 text-xs font-mono font-bold flex items-center space-x-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     <span>Active & Connected</span>
+                  </span>
+                ) : supabaseConfigured && !supabaseConnected ? (
+                  <span className="rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 text-xs font-mono font-bold flex items-center space-x-1.5 animate-pulse">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    <span>Configuration Issue</span>
                   </span>
                 ) : (
                   <span className="rounded-full bg-slate-800 text-slate-400 border border-slate-700 px-3 py-1 text-xs font-mono font-medium">
@@ -613,14 +622,54 @@ export default function AdminDashboard({
               </div>
 
               {supabaseConfigured ? (
-                <div className="text-xs text-slate-400 leading-relaxed space-y-2">
-                  <p>
-                    Your portfolio application is fully connected to your live Supabase backend. When you add, edit, or delete blog publications, the mutations are securely persisted directly in your Supabase relational database tables (<code className="text-indigo-400 font-mono">blog_posts</code> &amp; <code className="text-indigo-400 font-mono font-medium">blog_categories</code>).
-                  </p>
-                  <div className="p-3.5 rounded bg-slate-950 border border-slate-850 font-mono text-[11px] text-slate-500 space-y-1">
-                    <div><span className="text-slate-300 font-semibold">Connection Class:</span> Full-Stack Secure API Router Proxy</div>
+                supabaseConnected ? (
+                  <div className="text-xs text-slate-400 leading-relaxed space-y-2">
+                    <p>
+                      Your portfolio application is fully connected to your live Supabase backend. When you add, edit, or delete blog publications, the mutations are securely persisted directly in your Supabase relational database tables (<code className="text-indigo-400 font-mono">blog_posts</code> &amp; <code className="text-indigo-400 font-mono font-medium">blog_categories</code>).
+                    </p>
+                    <div className="p-3.5 rounded bg-slate-950 border border-slate-850 font-mono text-[11px] text-slate-500 space-y-1">
+                      <div><span className="text-slate-300 font-semibold">Connection Class:</span> Full-Stack Secure API Router Proxy</div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-xs text-slate-400 leading-relaxed space-y-3">
+                    <div className="p-3.5 rounded-lg bg-amber-500/5 border border-amber-500/10 text-slate-300 space-y-2">
+                      <div className="text-amber-400 font-bold flex items-center space-x-1.5 text-xs">
+                        <span>⚠️ Supabase Setup/Connection Issue Detected</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-slate-400">
+                        Secrets for Supabase are configured, but the application is unable to communicate with your database.
+                      </p>
+                      {supabaseError && (
+                        <div className="p-2 bg-slate-950 rounded border border-slate-850 font-mono text-[10px] text-rose-400 break-all overflow-x-auto max-h-24">
+                          {supabaseError}
+                        </div>
+                      )}
+                      
+                      {supabaseError && (supabaseError.toLowerCase().includes('relation') || supabaseError.toLowerCase().includes('does not exist')) ? (
+                        <div className="text-[11px] text-amber-300/90 leading-relaxed space-y-1 pt-1 border-t border-slate-800">
+                          <p className="font-semibold text-white">How to fix this issue:</p>
+                          <p>
+                            It looks like the required tables do not exist in your Supabase database yet. Please go to your <strong className="text-slate-200">Supabase Dashboard &gt; SQL Editor</strong>, paste and run the SQL code from the <code className="text-indigo-300 font-mono">supabase_setup.sql</code> file created at the root of this project.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-[11px] text-amber-300/90 leading-relaxed space-y-1 pt-1 border-t border-slate-800">
+                          <p className="font-semibold text-white">How to fix this issue:</p>
+                          <p>
+                            1. Double-check your <code className="text-white font-mono">SUPABASE_URL</code> and <code className="text-white font-mono">SUPABASE_ANON_KEY</code> in AI Studio Secrets Settings. Ensure there are no spaces or trailing slashes.
+                          </p>
+                          <p>
+                            2. Ensure your Supabase database project is active (not paused).
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 italic">
+                      The CMS has automatically fallen back to high-performance local storage cache mode, so you can continue managing content in your browser!
+                    </p>
+                  </div>
+                )
               ) : (
                 <div className="text-xs text-slate-400 leading-relaxed space-y-3">
                   <p>
