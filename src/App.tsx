@@ -255,12 +255,9 @@ export default function App() {
 
   // Sync to state, local cache & Supabase backend if configured
   const addBlogPost = async (newPost: BlogPost) => {
-    // 1. Instantly update UI for snappy user feedback (optimistic update)
-    const updated = [newPost, ...blogPosts];
-    setBlogPosts(updated);
-    localStorage.setItem('harendra_blogs', JSON.stringify(updated));
+    let postToSave = newPost;
 
-    // 2. Persist to Supabase in the background
+    // Persist to Supabase if configured
     if (supabaseConfigured) {
       try {
         const res = await fetch('/api/supabase/blogs', {
@@ -269,14 +266,28 @@ export default function App() {
           body: JSON.stringify(newPost)
         });
         if (!res.ok) {
-          console.warn('[Supabase Save Error]: Server returned non-OK code.');
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.error || `Server returned non-OK code (${res.status})`;
+          console.error('[Supabase Save Error]:', errMsg);
+          throw new Error(errMsg);
         } else {
-          console.log('[Supabase]: Blog post saved successfully to live database.');
+          const successData = await res.json();
+          if (successData.success && successData.data) {
+            postToSave = successData.data; // Use returned database row with true UUID!
+            console.log('[Supabase]: Blog post saved successfully with ID:', postToSave.id);
+          }
         }
-      } catch (e) {
-        console.warn('[Supabase Sync Error]: Network issue during save:', e);
+      } catch (e: any) {
+        console.error('[Supabase Sync Error]: Network issue during save:', e);
+        throw e;
       }
     }
+
+    // Update state with finalized post (replaces any temporary optimistic item)
+    const updated = [postToSave, ...blogPosts.filter((p) => p.id !== newPost.id && p.slug !== newPost.slug)];
+    setBlogPosts(updated);
+    localStorage.setItem('harendra_blogs', JSON.stringify(updated));
+    return postToSave;
   };
 
   const deleteBlogPost = async (id: string) => {
@@ -303,11 +314,8 @@ export default function App() {
   };
 
   const addNewsItem = async (newItem: NewsItem) => {
-    const updated = [newItem, ...newsItems];
-    setNewsItems(updated);
-    localStorage.setItem('harendra_news', JSON.stringify(updated));
+    let itemToSave = newItem;
 
-    // Persist to backend server database so other users see it!
     try {
       const res = await fetch('/api/news', {
         method: 'POST',
@@ -315,11 +323,25 @@ export default function App() {
         body: JSON.stringify(newItem)
       });
       if (!res.ok) {
-        console.warn('[News Sync Error]: Server returned non-OK status for news insertion.');
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData.error || `Server error during news insertion (${res.status})`;
+        console.error('[News Sync Error]:', errMsg);
+        throw new Error(errMsg);
+      } else {
+        const successData = await res.json();
+        if (successData.success && successData.data) {
+          itemToSave = successData.data;
+        }
       }
-    } catch (e) {
-      console.warn('[News Sync Error]: Network issue during news insertion:', e);
+    } catch (e: any) {
+      console.error('[News Sync Error]: Network issue during news insertion:', e);
+      throw e;
     }
+
+    const updated = [itemToSave, ...newsItems.filter((n) => n.id !== newItem.id && n.slug !== newItem.slug)];
+    setNewsItems(updated);
+    localStorage.setItem('harendra_news', JSON.stringify(updated));
+    return itemToSave;
   };
 
   const deleteNewsItem = async (id: string) => {

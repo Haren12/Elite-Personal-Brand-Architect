@@ -161,6 +161,8 @@ export async function initializeKyberSession(): Promise<PostQuantumHandshake> {
   const [searchQuery, setSearchQuery] = useState('');
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   // --- Left Sidebar Details ---
   const [outline, setOutline] = useState<{ heading: string; level: number }[]>([]);
@@ -497,43 +499,60 @@ export async function initializeKyberSession(): Promise<PostQuantumHandshake> {
   };
 
   // Sync to parent/state
-  const handleConfirmPublish = () => {
-    const finalPost: BlogPost = {
-      id: postId,
-      slug: slug || titleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-      author: {
-        name: 'Harendra Lamsal',
-        avatar: '/harendra_profile.jpg',
-        bioEn: 'Elite developer',
-        bioNp: 'वरिष्ठ डेभलपर',
-        role: 'Chief Solution Architect'
-      },
-      translations: {
-        en: {
-          title: titleEn,
-          excerpt: excerptEn || 'Architecting premium web services.',
-          content: contentEn,
-        },
-        ne: {
-          title: titleNp || `${titleEn} (Nepali)`,
-          excerpt: excerptNp || 'नेपाली संस्करण विवरण।',
-          content: contentNp || contentEn,
-        },
-      },
-      featuredImage: featuredImage,
-      categories: [category],
-      tags: tags,
-      publishedAt: new Date().toISOString(),
-      isFeatured: isFeatured,
-      isPopular: isPinned,
-      status: publishStatus,
-      readingTimeMin: Math.max(1, Math.ceil(contentEn.split(/\s+/).length / 220)),
-      views: 0,
-      commentsCount: 0,
-    };
+  const handleConfirmPublish = async () => {
+    if (!titleEn || !contentEn) {
+      alert('Title and content are required to publish.');
+      return;
+    }
 
-    onSave(finalPost);
-    alert('Enterprise blog post synchronized and published to CMS!');
+    setIsPublishing(true);
+    setPublishError(null);
+
+    try {
+      const finalPost: BlogPost = {
+        id: postId,
+        slug: slug || titleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        author: {
+          name: 'Harendra Lamsal',
+          avatar: '/harendra_profile.jpg',
+          bioEn: 'Elite developer',
+          bioNp: 'वरिष्ठ डेभलपर',
+          role: 'Chief Solution Architect'
+        },
+        translations: {
+          en: {
+            title: titleEn,
+            excerpt: excerptEn || 'Architecting premium web services.',
+            content: contentEn,
+          },
+          ne: {
+            title: titleNp || `${titleEn} (Nepali)`,
+            excerpt: excerptNp || 'नेपाली संस्करण विवरण।',
+            content: contentNp || contentEn,
+          },
+        },
+        featuredImage: featuredImage,
+        categories: [category],
+        tags: tags,
+        publishedAt: new Date().toISOString(),
+        isFeatured: isFeatured,
+        isPopular: isPinned,
+        status: publishStatus,
+        readingTimeMin: Math.max(1, Math.ceil(contentEn.split(/\s+/).length / 220)),
+        views: 0,
+        commentsCount: 0,
+      };
+
+      await onSave(finalPost);
+      alert('🎉 Enterprise blog post successfully inserted into database and synchronized to CMS!');
+    } catch (err: any) {
+      console.error('[Supabase CMS Save Error]:', err);
+      const errMsg = err.message || 'Database connection error during insertion.';
+      setPublishError(errMsg);
+      alert(`❌ Publishing failed:\n${errMsg}`);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   // Toggle outline helper outline generator
@@ -650,10 +669,11 @@ export async function initializeKyberSession(): Promise<PostQuantumHandshake> {
             </button>
             <button
               onClick={handleConfirmPublish}
-              className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-1.5 text-xs font-bold rounded-lg shadow-lg shadow-indigo-600/20 transition-all flex items-center space-x-1"
+              disabled={isPublishing}
+              className={`bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-4 py-1.5 text-xs font-bold rounded-lg shadow-lg shadow-indigo-600/20 transition-all flex items-center space-x-1 ${isPublishing ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <CheckCircle size={13} />
-              <span>Publish Sync</span>
+              <CheckCircle size={13} className={isPublishing ? 'animate-spin' : ''} />
+              <span>{isPublishing ? 'Publishing...' : 'Publish Sync'}</span>
             </button>
           </div>
 

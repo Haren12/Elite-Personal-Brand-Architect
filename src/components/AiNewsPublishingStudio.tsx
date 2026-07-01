@@ -104,6 +104,8 @@ We performed initial latency crawls across global edge endpoints:
   const [isBreaking, setIsBreaking] = useState(false);
   const [publishStatus, setPublishStatus] = useState<'draft' | 'published'>('published');
   const [author, setAuthor] = useState('Harendra Lamsal');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   // --- Local Immediate States for ultra-responsive typing ---
   const [localTitleEn, setLocalTitleEn] = useState(titleEn);
@@ -626,7 +628,7 @@ We performed initial latency crawls across global edge endpoints:
   };
 
   // Handle Publish Submit
-  const handlePublishSync = () => {
+  const handlePublishSync = async () => {
     const currentTitleEn = localTitleEn;
     const currentContentEn = localContentEn;
     const currentExcerptEn = localExcerptEn;
@@ -639,55 +641,67 @@ We performed initial latency crawls across global edge endpoints:
       return;
     }
 
-    const finalSlug = currentTitleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const finalItem: NewsItem = {
-      id: newsId,
-      slug: finalSlug,
-      translations: {
-        en: {
-          title: currentTitleEn,
-          excerpt: currentExcerptEn || 'High-fidelity live tech news.',
-          content: currentContentEn,
-        },
-        ne: {
-          title: currentTitleNp || `${currentTitleEn} (नेपाली विवरण)`,
-          excerpt: currentExcerptNp || 'नेपाली संस्करण लेख विवरण।',
-          content: currentContentNp || currentContentEn,
-        }
-      },
-      featuredImage: featuredImage || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
-      category: category,
-      tags: tags,
-      publishedAt: new Date().toISOString(),
-      isBreaking: isBreaking,
-      isTrending: isTrending,
-      isFeatured: isFeatured,
-      isEditorsPick: false,
-      isSticky: false,
-      status: publishStatus,
-      author: author || 'Harendra Lamsal',
-      readingTimeMin: readingTime,
-      views: 0
-    };
+    setIsPublishing(true);
+    setPublishError(null);
 
-    onSave(finalItem);
-    alert('🎉 Tech News article created and synced successfully to the homepage portal!');
-    
-    // Clear and reset state
-    setNewsId(`news-${Date.now()}`);
-    setTitleEn('');
-    setExcerptEn('');
-    setContentEn('');
-    setTitleNp('');
-    setExcerptNp('');
-    setContentNp('');
-    setLocalTitleEn('');
-    setLocalExcerptEn('');
-    setLocalContentEn('');
-    setLocalTitleNp('');
-    setLocalExcerptNp('');
-    setLocalContentNp('');
-    setTags(['AI', 'Tech']);
+    try {
+      const finalSlug = currentTitleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      const finalItem: NewsItem = {
+        id: newsId,
+        slug: finalSlug,
+        translations: {
+          en: {
+            title: currentTitleEn,
+            excerpt: currentExcerptEn || 'High-fidelity live tech news.',
+            content: currentContentEn,
+          },
+          ne: {
+            title: currentTitleNp || `${currentTitleEn} (नेपाली विवरण)`,
+            excerpt: currentExcerptNp || 'नेपाली संस्करण लेख विवरण।',
+            content: currentContentNp || currentContentEn,
+          }
+        },
+        featuredImage: featuredImage || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
+        category: category,
+        tags: tags,
+        publishedAt: new Date().toISOString(),
+        isBreaking: isBreaking,
+        isTrending: isTrending,
+        isFeatured: isFeatured,
+        isEditorsPick: false,
+        isSticky: false,
+        status: publishStatus,
+        author: author || 'Harendra Lamsal',
+        readingTimeMin: readingTime,
+        views: 0
+      };
+
+      await onSave(finalItem);
+      alert('🎉 Tech News article created and synced successfully to the homepage portal!');
+      
+      // Clear and reset state
+      setNewsId(`news-${Date.now()}`);
+      setTitleEn('');
+      setExcerptEn('');
+      setContentEn('');
+      setTitleNp('');
+      setExcerptNp('');
+      setContentNp('');
+      setLocalTitleEn('');
+      setLocalExcerptEn('');
+      setLocalContentEn('');
+      setLocalTitleNp('');
+      setLocalExcerptNp('');
+      setLocalContentNp('');
+      setTags(['AI', 'Tech']);
+    } catch (err: any) {
+      console.error('[News CMS Save Error]:', err);
+      const errMsg = err.message || 'Server error during news publishing.';
+      setPublishError(errMsg);
+      alert(`❌ News publishing failed:\n${errMsg}`);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   return (
@@ -754,10 +768,11 @@ We performed initial latency crawls across global edge endpoints:
 
           <button
             onClick={handlePublishSync}
-            className="bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white px-5 py-2 text-xs font-bold rounded-lg shadow-lg shadow-rose-600/10 transition-all flex items-center space-x-1.5"
+            disabled={isPublishing}
+            className={`bg-gradient-to-r from-rose-600 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white px-5 py-2 text-xs font-bold rounded-lg shadow-lg shadow-rose-600/10 transition-all flex items-center space-x-1.5 ${isPublishing ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <CheckCircle size={14} />
-            <span>Publish News Bulletin</span>
+            <CheckCircle size={14} className={isPublishing ? 'animate-spin' : ''} />
+            <span>{isPublishing ? 'Publishing...' : 'Publish News Bulletin'}</span>
           </button>
         </div>
       </header>

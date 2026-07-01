@@ -107,6 +107,7 @@ export default function AiArticleArchitect({
 
   // The generated article structure
   const [articleResult, setArticleResult] = useState<any>(null);
+  const [isPublishing, setIsPublishing] = useState<{[key: string]: boolean}>({ blog: false, news: false });
 
   // Handle Copy feedback
   const handleCopy = (text: string, fieldId: string) => {
@@ -201,82 +202,91 @@ export default function AiArticleArchitect({
   };
 
   // Publish to real state
-  const handlePublish = (targetType: 'blog' | 'news') => {
+  const handlePublish = async (targetType: 'blog' | 'news') => {
     if (!articleResult) return;
+
+    setIsPublishing(prev => ({ ...prev, [targetType]: true }));
 
     const slug = articleResult.slug || topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const defaultImage = '/assets/placeholder-tech.jpg';
 
-    if (targetType === 'blog') {
-      const newPost: BlogPost = {
-        id: `blog-${Date.now()}`,
-        slug,
-        author: {
-          name: 'Harendra Lamsal',
-          avatar: '/harendra_profile.jpg',
-          bioEn: 'Elite Full-Stack Architect & Digital Marketer.',
-          bioNp: 'वरिष्ठ फुल-स्ट्याक आर्किटेक्ट र डिजिटल मार्केटर।',
-          role: 'Chief Solution Architect'
-        },
-        translations: {
-          en: {
-            title: articleResult.title || topic,
-            excerpt: articleResult.excerpt || articleResult.metaDescription || 'Elite technology research resource.',
-            content: articleResult.contentEn || 'Draft english content.'
+    try {
+      if (targetType === 'blog') {
+        const newPost: BlogPost = {
+          id: `blog-${Date.now()}`,
+          slug,
+          author: {
+            name: 'Harendra Lamsal',
+            avatar: '/harendra_profile.jpg',
+            bioEn: 'Elite Full-Stack Architect & Digital Marketer.',
+            bioNp: 'वरिष्ठ फुल-स्ट्याक आर्किटेक्ट र डिजिटल मार्केटर।',
+            role: 'Chief Solution Architect'
           },
-          ne: {
-            title: articleResult.titleNp || articleResult.title || `${topic} (नेपाली संस्करण)`,
-            excerpt: articleResult.excerptNp || articleResult.excerpt || 'नेपाली संस्करण लेख विवरण।',
-            content: articleResult.contentNp || articleResult.contentEn || 'मस्यौदा सामग्री नेपालीमा।'
-          }
-        },
-        featuredImage: defaultImage,
-        categories: [articleResult.category || 'Artificial Intelligence'],
-        tags: articleResult.tags || ['tech', 'programming'],
-        publishedAt: new Date().toISOString(),
-        isFeatured: true,
-        isPopular: false,
-        status: 'published',
-        readingTimeMin: Math.max(2, Math.ceil((articleResult.contentEn || '').split(' ').length / 220)),
-        views: 0,
-        commentsCount: 0
-      };
-
-      addBlogPost(newPost);
-      alert(`🎉 Successfully published enterprise blog post: "${newPost.translations.en.title}" directly to your website!`);
-    } else {
-      const newItem: NewsItem = {
-        id: `news-${Date.now()}`,
-        slug,
-        translations: {
-          en: {
-            title: articleResult.title || topic,
-            excerpt: articleResult.excerpt || articleResult.metaDescription || 'Tech bulletin announcement.',
-            content: articleResult.contentEn || 'Draft english news.'
+          translations: {
+            en: {
+              title: articleResult.title || topic,
+              excerpt: articleResult.excerpt || articleResult.metaDescription || 'Elite technology research resource.',
+              content: articleResult.contentEn || 'Draft english content.'
+            },
+            ne: {
+              title: articleResult.titleNp || articleResult.title || `${topic} (नेपाली संस्करण)`,
+              excerpt: articleResult.excerptNp || articleResult.excerpt || 'नेपाली संस्करण लेख विवरण।',
+              content: articleResult.contentNp || articleResult.contentEn || 'मस्यौदा सामग्री नेपालीमा।'
+            }
           },
-          ne: {
-            title: articleResult.titleNp || articleResult.title || `${topic} (नेपाली समाचार)`,
-            excerpt: articleResult.excerptNp || articleResult.excerpt || 'नेपाली समाचार विवरण।',
-            content: articleResult.contentNp || articleResult.contentEn || 'मस्यौदा समाचार नेपालीमा।'
-          }
-        },
-        featuredImage: defaultImage,
-        category: (articleResult.category || 'Artificial Intelligence') as any,
-        tags: articleResult.tags || ['news', 'announcement'],
-        publishedAt: new Date().toISOString(),
-        isBreaking: true,
-        isTrending: true,
-        isFeatured: true,
-        isEditorsPick: true,
-        isSticky: false,
-        status: 'published',
-        author: 'Harendra Lamsal',
-        readingTimeMin: Math.max(2, Math.ceil((articleResult.contentEn || '').split(' ').length / 220)),
-        views: 0
-      };
+          featuredImage: defaultImage,
+          categories: [articleResult.category || 'Artificial Intelligence'],
+          tags: articleResult.tags || ['tech', 'programming'],
+          publishedAt: new Date().toISOString(),
+          isFeatured: true,
+          isPopular: false,
+          status: 'published',
+          readingTimeMin: Math.max(2, Math.ceil((articleResult.contentEn || '').split(' ').length / 220)),
+          views: 0,
+          commentsCount: 0
+        };
 
-      addNewsItem(newItem);
-      alert(`📰 Successfully published breaking news bulletin: "${newItem.translations.en.title}" directly to your Tech News Portal!`);
+        await addBlogPost(newPost);
+        alert(`🎉 Successfully published enterprise blog post: "${newPost.translations.en.title}" directly to your website!`);
+      } else {
+        const newItem: NewsItem = {
+          id: `news-${Date.now()}`,
+          slug,
+          translations: {
+            en: {
+              title: articleResult.title || topic,
+              excerpt: articleResult.excerpt || articleResult.metaDescription || 'Tech bulletin announcement.',
+              content: articleResult.contentEn || 'Draft english news.'
+            },
+            ne: {
+              title: articleResult.titleNp || articleResult.title || `${topic} (नेपाली समाचार)`,
+              excerpt: articleResult.excerptNp || articleResult.excerpt || 'नेपाली समाचार विवरण।',
+              content: articleResult.contentNp || articleResult.contentEn || 'मस्यौदा समाचार नेपालीमा।'
+            }
+          },
+          featuredImage: defaultImage,
+          category: (articleResult.category || 'Artificial Intelligence') as any,
+          tags: articleResult.tags || ['news', 'announcement'],
+          publishedAt: new Date().toISOString(),
+          isBreaking: true,
+          isTrending: true,
+          isFeatured: true,
+          isEditorsPick: true,
+          isSticky: false,
+          status: 'published',
+          author: 'Harendra Lamsal',
+          readingTimeMin: Math.max(2, Math.ceil((articleResult.contentEn || '').split(' ').length / 220)),
+          views: 0
+        };
+
+        await addNewsItem(newItem);
+        alert(`📰 Successfully published breaking news bulletin: "${newItem.translations.en.title}" directly to your Tech News Portal!`);
+      }
+    } catch (err: any) {
+      console.error('[Architect Save Failure]:', err);
+      alert(`❌ Publishing failed:\n${err.message || 'Database error during save.'}`);
+    } finally {
+      setIsPublishing(prev => ({ ...prev, [targetType]: false }));
     }
   };
 
@@ -632,18 +642,20 @@ export default function AiArticleArchitect({
                     <button
                       onClick={() => handlePublish('blog')}
                       type="button"
-                      className="inline-flex items-center space-x-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 text-xs font-bold text-white transition-all shadow"
+                      disabled={isPublishing.blog || isPublishing.news}
+                      className={`inline-flex items-center space-x-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 px-3.5 py-2 text-xs font-bold text-white transition-all shadow ${(isPublishing.blog || isPublishing.news) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <BookOpen size={13} />
-                      <span>Publish as Blog</span>
+                      <BookOpen size={13} className={isPublishing.blog ? "animate-spin" : ""} />
+                      <span>{isPublishing.blog ? 'Publishing...' : 'Publish as Blog'}</span>
                     </button>
                     <button
                       onClick={() => handlePublish('news')}
                       type="button"
-                      className="inline-flex items-center space-x-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 text-xs font-bold text-white transition-all shadow"
+                      disabled={isPublishing.blog || isPublishing.news}
+                      className={`inline-flex items-center space-x-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 text-xs font-bold text-white transition-all shadow ${(isPublishing.blog || isPublishing.news) ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <Newspaper size={13} />
-                      <span>Publish as News</span>
+                      <Newspaper size={13} className={isPublishing.news ? "animate-spin" : ""} />
+                      <span>{isPublishing.news ? 'Publishing...' : 'Publish as News'}</span>
                     </button>
                   </div>
                 </div>

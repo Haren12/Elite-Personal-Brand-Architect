@@ -5,18 +5,30 @@ dotenv.config();
 
 let supabaseClient: any = null;
 
+function cleanEnvValue(val: string | undefined): string {
+  if (!val) return "";
+  let s = val.trim();
+  if ((s.startsWith('"') && s.endsWith('"')) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
 function resolveSupabaseEnv() {
-  const url =
+  const rawUrl =
     process.env.SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
     process.env.NEXT_PUBLIC_SUPABASE_URL;
 
   // FIX: Removed process.env.GEMINI_API_KEY from the fallback list of Supabase anon key as they are completely different
-  const anonKey =
+  const rawAnonKey =
     process.env.SUPABASE_ANON_KEY ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.VITE_SUPABASE_ANON_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  const url = cleanEnvValue(rawUrl);
+  const anonKey = cleanEnvValue(rawAnonKey);
 
   return { url, anonKey };
 }
@@ -166,8 +178,9 @@ export async function insertMappedBlogPost(post: any) {
       }
     }
 
-    const dbPost = {
-      id: post.id || undefined,
+    const isValidUUID = post.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(post.id);
+
+    const dbPost: any = {
       slug: post.slug,
       title_en: post.translations?.en?.title || "",
       title_ne: post.translations?.ne?.title || "",
@@ -196,14 +209,24 @@ export async function insertMappedBlogPost(post: any) {
       external_references: [],
     };
 
+    if (isValidUUID) {
+      dbPost.id = post.id;
+    }
+
     const { data, error } = await supabase
       .from("blog_posts")
       .insert(dbPost)
       .select()
       .single();
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.error("[Supabase Insert Database Error]:", error);
+      throw error;
+    }
+
+    // Fetch the fully mapped post structure to return to the client
+    const mappedPost = await getMappedBlogPost(data.id);
+    return mappedPost || data;
   } catch (err) {
     console.error(
       "Error inserting mapped blog post into Supabase:",
