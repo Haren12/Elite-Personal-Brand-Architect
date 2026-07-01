@@ -822,8 +822,8 @@ ${category && category !== 'All-Purpose / Auto-Detect' ? `You MUST categorize th
           prompt = `Provide assistance on the following text: "${text}" with custom prompt: "${action}"`;
       }
 
-      const response = await client.models.generateContent({
-        model: 'gemini-3.5-flash',
+      const response = await generateContentWithFallback(client, {
+        model: 'gemini-2.5-flash',
         contents: prompt,
       });
 
