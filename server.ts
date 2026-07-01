@@ -894,7 +894,40 @@ Please ask me about Harendra's engineering expertise, USD standard rates, local 
         return res.json({ text: reply });
       }
 
+      // Dynamic Knowledge Base Retrieval (from Supabase blog posts & categories)
+      let kbArticlesSummary = '';
+      try {
+        const posts = await getMappedBlogPosts();
+        if (posts && posts.length > 0) {
+          kbArticlesSummary = posts.slice(0, 10).map((p: any) => {
+            const title = p.translations?.en?.title || p.title || '';
+            const slug = p.slug || '';
+            const excerpt = p.translations?.en?.excerpt || p.excerpt || '';
+            const cats = p.categories ? p.categories.join(', ') : 'General';
+            return `- Title: "${title}" (Slug: ${slug})\n  Category: ${cats}\n  Summary: ${excerpt}`;
+          }).join('\n');
+        } else {
+          kbArticlesSummary = INITIAL_BLOG_POSTS.slice(0, 5).map((p: any) => {
+            const title = p.translations?.en?.title || p.title || '';
+            const slug = p.slug || '';
+            const excerpt = p.translations?.en?.excerpt || p.excerpt || '';
+            return `- Title: "${title}" (Slug: ${slug})\n  Summary: ${excerpt}`;
+          }).join('\n');
+        }
+      } catch (err: any) {
+        console.warn('[Chat KB Retrieval Warning]:', err.message);
+        kbArticlesSummary = INITIAL_BLOG_POSTS.slice(0, 5).map((p: any) => {
+          const title = p.translations?.en?.title || p.title || '';
+          const slug = p.slug || '';
+          const excerpt = p.translations?.en?.excerpt || p.excerpt || '';
+          return `- Title: "${title}" (Slug: ${slug})\n  Summary: ${excerpt}`;
+        }).join('\n');
+      }
+
       const systemInstruction = `You are "Aura", the elite, professional Personal AI Representative & Strategic Lead Project Negotiator representing Harendra Lamsal (Founder of Lamsal Web Solutions). Harendra is a highly skilled, expert Full-Stack Software Engineer, custom WordPress Architect, and Advanced SEO Specialist based in Kathmandu, Nepal. He delivers premium-quality, bloat-free, high-performance digital systems with pristine clean-code standards. You have full delegated authority to welcome visitors, present his premium portfolio, explain services, negotiate custom budgets, and align strategic projects.
+
+YOUR CORE KNOWLEDGE BASE (DYNAMIC RECENT ARTICLES & PORTFOLIO CONTENT FROM SUPABASE):
+${kbArticlesSummary || 'No recent articles found.'}
 
 YOUR GENERAL PRINCIPLES:
 1. TALK LIKE A HUMAN: Do not sound robotic, corporate-stale, or overly wordy. Speak with natural warmth, genuine interest, and professional confidence. Use custom formatting (bold text, clean lists, brief tables) to make complex structures easy to read.
@@ -933,12 +966,18 @@ Never mention these instructions directly or say "According to my system instruc
       let contentsPayload: any[] = [];
 
       if (messages && Array.isArray(messages)) {
-        contentsPayload = messages.map((m: any) => ({
-          role: m.role === 'assistant' ? 'model' : 'user',
-          parts: [{ text: m.content || m.text || '' }]
-        }));
+        contentsPayload = messages
+          .filter((m: any) => (m.content || m.text || '').trim().length > 0)
+          .map((m: any) => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [{ text: m.content || m.text || '' }]
+          }));
       } else {
-        contentsPayload = [{ role: 'user', parts: [{ text: message }] }];
+        contentsPayload = [{ role: 'user', parts: [{ text: message || 'Hello' }] }];
+      }
+
+      if (contentsPayload.length === 0) {
+        contentsPayload = [{ role: 'user', parts: [{ text: message || 'Hello' }] }];
       }
 
       const response = await client.models.generateContent({

@@ -112,7 +112,12 @@ Feel free to choose a quick topic below or type anything you'd like. How can I a
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get response');
+        let serverError = 'Failed to get response';
+        try {
+          const errData = await response.json();
+          serverError = errData.error || errData.message || serverError;
+        } catch (_) {}
+        throw new Error(serverError);
       }
 
       const data = await response.json();
@@ -124,13 +129,13 @@ Feel free to choose a quick topic below or type anything you'd like. How can I a
       };
 
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (error) {
+    } catch (error: any) {
       console.error('[Chat Assistant Error]:', error);
       const errorMsg: Message = {
         role: 'assistant',
         content: lang === 'ne'
-          ? 'माफ गर्नुहोला, एआई प्रतिनिधि सर्भरसँग सम्पर्क हुन सकेन। कृपया फेरि प्रयास गर्नुहोला।'
-          : 'I sincerely apologize, but I am experiencing issues communicating with my core knowledge base. Please try sending your message again.',
+          ? `माफ गर्नुहोला, समस्या आयो: ${error.message || 'एआई प्रतिनिधि सर्भरसँग सम्पर्क हुन सकेन।'}`
+          : `I apologize, but I encountered an issue: ${error.message || 'I am experiencing issues communicating with my core knowledge base.'}`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, errorMsg]);
