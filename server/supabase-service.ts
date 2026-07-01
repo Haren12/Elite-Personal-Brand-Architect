@@ -127,6 +127,7 @@ export async function getMappedBlogPosts() {
           post.cover_image_url ||
           "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
         categories: categoriesList,
+        category: categoriesList[0] || "General",
         tags: post.tags || [],
         publishedAt:
           post.published_at || post.created_at || new Date().toISOString(),
@@ -153,7 +154,7 @@ export async function insertMappedBlogPost(post: any) {
   try {
     let categoryId = null;
     const catName =
-      post.categories && post.categories[0] ? post.categories[0] : "General";
+      post.categories && post.categories[0] ? post.categories[0] : (post.category || "General");
 
     const categories = await fetchCategories();
     const existingCat = (categories || []).find(
@@ -290,6 +291,7 @@ export async function getMappedBlogPost(id: string) {
         post.cover_image_url ||
         "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=800&q=80",
       categories: categoriesList,
+      category: categoriesList[0] || "General",
       tags: post.tags || [],
       publishedAt:
         post.published_at || post.created_at || new Date().toISOString(),

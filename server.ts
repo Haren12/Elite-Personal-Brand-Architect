@@ -297,18 +297,41 @@ app.use('/api/gemini/*', geminiRateLimiter);
     }
   });
 
-  app.post('/api/news', (req, res) => {
+  app.post('/api/news', async (req, res) => {
     try {
       const newItem = req.body;
       if (!newItem || !newItem.id || !newItem.slug) {
         return res.status(400).json({ error: 'Invalid news article data' });
       }
+
+      const client = getSupabase();
+      let savedData = newItem;
+
+      if (client) {
+        try {
+          console.log('[Supabase News Insertion]: Publishing news item to blog_posts table:', newItem.slug);
+          // Verify table is blog_posts and insertion payload matches schema via insertMappedBlogPost
+          const data = await insertMappedBlogPost(newItem);
+          savedData = data;
+          console.log('[Supabase News Insertion Success]: News saved to blog_posts. ID:', data.id);
+        } catch (supabaseError: any) {
+          console.error('[Supabase News Insertion DB Error]:', supabaseError);
+          // Return the actual Supabase error instead of returning a generic 500 response
+          return res.status(500).json({ 
+            error: `Supabase database insertion error (table: blog_posts): ${supabaseError.message || supabaseError.details || JSON.stringify(supabaseError)}` 
+          });
+        }
+      }
+
       const news = getNewsData();
-      const filtered = news.filter((item: any) => item.id !== newItem.id);
-      const updated = [newItem, ...filtered];
+      const filtered = news.filter((item: any) => item.id !== newItem.id && item.slug !== newItem.slug);
+      const updated = [savedData, ...filtered];
       saveNewsData(updated);
-      res.json({ success: true, data: newItem });
+
+      // Only return success if database insert completes successfully
+      res.json({ success: true, data: savedData });
     } catch (e: any) {
+      console.error('[News API Endpoint Error]:', e);
       res.status(500).json({ error: e.message || 'Failed to save news' });
     }
   });
