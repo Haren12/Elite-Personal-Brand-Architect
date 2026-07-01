@@ -30,11 +30,11 @@ const PORT = 3000;
 // Lazy initialize Gemini client to prevent startup crash if key is missing
 let aiClient: GoogleGenAI | null = null;
 
-function getAiClient(): GoogleGenAI {
+function getAiClient(): GoogleGenAI | null {
   if (!aiClient) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      throw new Error('GEMINI_API_KEY is not defined in the environment secrets.');
+      return null;
     }
     aiClient = new GoogleGenAI({
       apiKey: apiKey,
@@ -318,6 +318,13 @@ app.use('/api/gemini/*', geminiRateLimiter);
       }
 
       const client = getAiClient();
+      if (!client) {
+        return res.json({
+          translatedTitle: title + " (नेपाली अनुवाद - Preview)",
+          translatedExcerpt: excerpt ? (excerpt + " - एआई अनुवादित (नेपाली)") : "नेपालीमा यस लेखको संक्षिप्त विवरण चाँडै आउँदैछ।",
+          translatedContent: `## ${title} (नेपाली अनुवाद)\n\n${content}\n\n---\n\n*द्रष्टव्य: एआई साँचो (GEMINI_API_KEY) सेट नभएको कारण यो लेख अफलाइन पूर्वावलोकन मोडमा अनुवाद गरिएको हो। पूरा सेवा सुचारु गर्न एआई स्टुडियोमा कुञ्जी कन्फिगर गर्नुहोस्।*`
+        });
+      }
       
       const response = await client.models.generateContent({
         model: 'gemini-3.5-flash',
@@ -371,6 +378,12 @@ app.use('/api/gemini/*', geminiRateLimiter);
       }
 
       const client = getAiClient();
+      if (!client) {
+        return res.json({
+          metaDescription: `Discover professional insights, expert architectural guidance, and performance optimization guides for ${title} on Harendra's portal.`,
+          tags: "tech, software, programming, web, architecture"
+        });
+      }
       
       const response = await client.models.generateContent({
         model: 'gemini-3.5-flash',
@@ -427,6 +440,54 @@ app.use('/api/gemini/*', geminiRateLimiter);
       }
 
       const client = getAiClient();
+      if (!client) {
+        const cleanSlug = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'tech-article';
+        const displayCategory = category && category !== 'All-Purpose / Auto-Detect' ? category : 'Science & Technology';
+        
+        return res.json({
+          title: topic,
+          slug: cleanSlug,
+          excerpt: `An in-depth, expert exploration of ${topic}, analyzing modern design patterns, security protocols, and optimization strategies.`,
+          category: displayCategory,
+          tags: [displayCategory.toLowerCase().replace(/[^a-z0-9]/g, ''), 'software', 'programming'],
+          featuredImagePrompt: `Bespoke modern high-tech concept art for "${topic}", styled with ambient neon lighting, deep space color schemes, and vector tech interfaces.`,
+          metaTitle: `${topic} - Harendra Lamsal's Tech Portal`,
+          metaDescription: `Discover professional insights, expert architectural guidance, and performance optimization guides for ${topic}.`,
+          canonicalSlug: cleanSlug,
+          focusKeyword: topic.toLowerCase(),
+          secondaryKeywords: [topic.toLowerCase() + ' tutorial', topic.toLowerCase() + ' architecture', 'clean code'],
+          lsiKeywords: ['software engineering', 'scalability', 'performance optimization'],
+          internalLinkSuggestions: ['Full-Stack Architect', 'WordPress Customization', 'Core Web Vitals'],
+          externalAuthorityReferences: ['https://developer.mozilla.org', 'https://github.com'],
+          imageAltText: `Conceptual graphic highlighting key components of ${topic}`,
+          openGraphTitle: `${topic} | Harendra's Tech Blog`,
+          openGraphDescription: `An industry-grade case study and masterclass covering ${topic}.`,
+          twitterCardDescription: `Unlocking the complete architectural roadmap for ${topic}. Read Harendra's latest tech report.`,
+          jsonLdSchema: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": topic,
+            "description": `In-depth analysis of ${topic}`,
+            "author": { "@type": "Person", "name": "Harendra Lamsal" }
+          }),
+          tableOfContents: [
+            { heading: "1. Executive Summary & Overview", level: 2 },
+            { heading: "2. Architectural Challenges & Core Mechanics", level: 2 },
+            { heading: "3. Implementation Guide & Modern Code Standards", level: 2 },
+            { heading: "4. Troubleshooting & Best Practices", level: 2 }
+          ],
+          contentEn: `## 1. Executive Summary & Overview\n\nThis paper examines **${topic}** from a production-first perspective. As modern web architectures transition toward lightweight, fast, and secure paradigms, understanding the underlying principles of **${topic}** is essential for developers, technical architects, and product managers alike.\n\n### Why it Matters\nWhen building software systems, we often overcomplicate solutions or depend on bloated third-party abstractions. By applying clean engineering practices, we can achieve superior results while maintaining high code clarity.\n\n## 2. Architectural Challenges & Core Mechanics\n\nImplementing high-performance systems for **${topic}** introduces standard challenges:\n- **State Management**: Keeping clients and backend nodes beautifully synchronized.\n- **Network Overhead**: Minimizing HTTP round-trips and payload size.\n- **Scalability**: Crafting non-blocking logic to maximize concurrency.\n\n## 3. Implementation Guide & Modern Code Standards\n\nBelow is a highly structured TypeScript/Node.js example showing clean, self-contained implementation patterns:\n\n\`\`\`typescript\n// ${topic} core structure\nexport interface Config {\n  enabled: boolean;\n  timeoutMs: number;\n}\n\nexport class CoreManager {\n  private config: Config;\n  \n  constructor(config: Config) {\n    this.config = config;\n  }\n  \n  public async initialize(): Promise<boolean> {\n    console.log("[${topic} Core]: System boot completed.");\n    return this.config.enabled;\n  }\n}\n\`\`\`\n\n## 4. Troubleshooting & Best Practices\n\n- **Check Configuration**: Always verify environment secrets are loaded.\n- **Graceful Failures**: Implement elegant fallback strategies for non-blocking UI states.\n- **Optimize Rendering**: Use memoization and debounce handlers on active streams.\n\n---\n\n*Note: This article was created in Offline Preview Mode because no GEMINI_API_KEY was found in the environment.*`,
+          contentNp: `## १. कार्यकारी सारांश र सिंहावलोकन\n\nयस लेखमा हामी **${topic}** को बारेमा गहन प्राविधिक विश्लेषण प्रस्तुत गर्दछौं। आधुनिक वेब प्रविधिहरू तीव्र गति, सुरक्षा र सरलता तर्फ अघि बढिरहेका बेला, यसका आधारभूत सिद्धान्तहरू बुझ्नु प्रत्येक विकासकर्ता र प्रविधि विशेषज्ञको लागि अपरिहार्य छ।\n\n## २. प्राविधिक चुनौतीहरू र मुख्य संयन्त्र\n\nयस प्रविधिको प्रयोगमा सामान्यतया देखिने मुख्य चुनौतीहरू निम्न छन्:\n- **तथ्याङ्क व्यवस्थापन (State Management)**: सर्भर र क्लाइन्ट बीच डाटाको सन्तुलित आदानप्रदान।\n- **सुरक्षा व्यवस्थापन (Security & Authentication)**: एपीआई कुञ्जी र संवेदनशील विवरणहरू सुरक्षित राख्ने।\n\n---\n\n*द्रष्टव्य: एआई साँचो (GEMINI_API_KEY) कन्फिगर नभएको कारण यो लेख अफलाइन पूर्वावलोकन मोडमा सिर्जना गरिएको हो।*`,
+          faq: [
+            { question: `What is the primary benefit of ${topic}?`, answer: `It allows for robust, scalable systems that execute with minimal resource consumption.` },
+            { question: `How can I customize this setup further?`, answer: `By adapting the core parameters to your business logic or syncing it with real-time Firestore triggers.` }
+          ],
+          summary: `• Detailed analysis of ${topic} architecture.\n• Modern step-by-step code sample in TypeScript.\n• Optimization tips for production delivery.\n• Local Nepalese rates integration details.`,
+          relatedArticlesSuggestions: [`Mastering Clean Code in React`, `A Guide to WordPress Core Web Vitals`, `Designing Scalable APIs`],
+          socialMediaCaption: `🚀 Just published Harendra Lamsal's deep-dive report on: ${topic}! Discover how to optimize your production workflow and design resilient clean-code architectures. #webdev #programming #softwareengineering #kathmandu #nepal`,
+          newsletterSummary: `Hi subscriber! I have just written a masterclass on ${topic}. We break down the absolute best practices, share modern code snippets, and solve complex scaling challenges. Check it out today!`
+        });
+      }
 
       // Adjust model selection safely. Use the model requested by user or fallback.
       const selectedModel = model === 'gemini-3.1-pro-preview' ? 'gemini-3.1-pro-preview' : 'gemini-3.5-flash';
@@ -643,6 +704,11 @@ ${category && category !== 'All-Purpose / Auto-Detect' ? `You MUST categorize th
       }
 
       const client = getAiClient();
+      if (!client) {
+        return res.json({
+          result: `[Offline Preview - ${action.toUpperCase()}]\n\nHere is a mock processed result for your request:\n"${text}"\n\n(Tip: Add a real GEMINI_API_KEY in Settings > Secrets to unlock live, context-aware AI text edits!)`
+        });
+      }
       let prompt = '';
 
       switch (action) {
@@ -722,6 +788,111 @@ ${category && category !== 'All-Purpose / Auto-Detect' ? `You MUST categorize th
       }
 
       const client = getAiClient();
+      if (!client) {
+        // Heuristic fallback matching for Aura offline agent
+        const cleanMsg = (message || '').toLowerCase().trim();
+        const lastUserMsgObj = (messages && messages.length > 0) ? messages[messages.length - 1] : null;
+        const lastUserContent = lastUserMsgObj ? (lastUserMsgObj.content || '').toLowerCase().trim() : '';
+        const lang = req.body.lang || 'en';
+        
+        const textToAnalyze = cleanMsg || lastUserContent;
+        let reply = '';
+        
+        if (textToAnalyze.includes('nepal') || textToAnalyze.includes('npr') || textToAnalyze.includes('२०,०००') || textToAnalyze.includes('20,000') || textToAnalyze.includes('local') || textToAnalyze.includes('initiative') || textToAnalyze.includes('स्थानीय') || textToAnalyze.includes('नेपाल') || textToAnalyze.includes('नेपाली')) {
+          reply = lang === 'ne' || textToAnalyze.match(/[\u0900-\u097F]/)
+            ? `म हाम्रो **विशेष नेपाली स्थानीय प्रवर्द्धन दर (NPR २०,००० बाट सुरु हुने)** को बारेमा छलफल गर्न पाउँदा अत्यन्तै खुसी छु। यो स्थानीय दर नेपालका स्थानीय व्यवसाय, स्टार्टअप र सामुदायिक पहलहरूलाई मद्दत गर्नको लागि हरेन्द्रको "Local Digital Empowerment Initiative" अन्तर्गत उपलब्ध गराइएको हो।
+            
+यो स्थानीय प्रवर्द्धन दरको लागि योग्यता प्रमाणित गर्न, कृपया मलाई छोटो जानकारी दिनुहोला:
+१. के तपाईंको व्यवसाय/संस्था नेपालमा दर्ता भई स्थानीय रूपमा सञ्चालन भइरहेको छ?
+२. के तपाईंको परियोजनाले मुख्यतया नेपाली प्रयोगकर्ताहरूलाई लक्षित गर्छ (जस्तै: eSewa, Khalti जस्ता स्थानीय भुक्तानी गेटवे वा .com.np डोमेन आवश्यक पर्ने)?
+
+कृपया मलाई यी दुई प्रश्नको उत्तर दिनुहोस्, र म तुरुन्तै तपाईंको प्रस्ताव अनुसारको बजेट सम्झौता अगाडि बढाउनेछु!`
+            : `I would be absolutely delighted to explore our **Special Nepalese Local Initiative rate (starting at NPR 20,000)** for your project. This is a special initiative run by Harendra to empower Nepalese local businesses, startups, and community builders.
+            
+To help me verify eligibility for this local initiative, could you quickly tell me:
+1. Is your business/organization registered or operating locally in Nepal?
+2. Will your project target local Nepalese users (e.g., requiring local payment gateway integrations like eSewa, Khalti, or a local .com.np domain registration)?
+
+Please share these brief details, and I will be happy to assist you further!`;
+        } else if (textToAnalyze.includes('yes') || textToAnalyze.includes('ho') || textToAnalyze.includes('हो') || textToAnalyze.includes('garchha') || textToAnalyze.includes('local initiative') || textToAnalyze.includes('nepalese local')) {
+          reply = lang === 'ne' || textToAnalyze.match(/[\u0900-\u097F]/)
+            ? `उत्कृष्ट! तपाईंको व्यवसाय र परियोजनाको विवरण स्थानीय प्रवर्द्धनको लागि योग्य देखिएको छ। हरेन्द्र लाम्सालले स्थानीय नेपाली उद्यमीहरूलाई प्रिमियम वेब सोलुसन प्रदान गर्न तयार पारेको दर सूची यस प्रकार छ:
+
+- **सरल वेबसाइट / WordPress सेटअप**: NPR २०,००० बाट सुरु!
+- **साना व्यवसाय र ई-कमर्स हब**: NPR ३५,००० देखि ६०,००० सम्म।
+- **कस्टम React / Next.js उच्च कार्यक्षमता प्रणाली**: NPR ५०,०००+।
+
+कृपया तपाईंको परियोजनाको आवश्यकता, आवश्यक फिचर्स र समयसीमा बताउनुहोस्। म तपाईंको बजेट अनुसार सम्झौता तयार गर्न पूर्ण रूपमा अधिकृत छु!`
+            : `Fantastic! Your project matches our Nepalese Local Digital Empowerment criteria. Harendra is highly committed to supporting local builders. Here are our special local rates:
+
+- **Simple Website / WordPress Setup**: Starts at NPR 20,000!
+- **Small Business & E-commerce Hub**: NPR 35,000 - NPR 60,000.
+- **Custom React / Next.js Systems**: NPR 50,000+.
+
+Please share your specific project requirements and preferred timeline. I am authorized to draft a flexible, win-win budget agreement for you!`;
+        } else if (textToAnalyze.includes('rate') || textToAnalyze.includes('price') || textToAnalyze.includes('pricing') || textToAnalyze.includes('cost') || textToAnalyze.includes('services') || textToAnalyze.includes('budget') || textToAnalyze.includes('negotiat') || textToAnalyze.includes('offer') || textToAnalyze.includes('दर') || textToAnalyze.includes('मूल्य') || textToAnalyze.includes('पैसा') || textToAnalyze.includes('बजेट')) {
+          reply = lang === 'ne' || textToAnalyze.match(/[\u0900-\u097F]/)
+            ? `हरेन्द्र लाम्सालले प्रदान गर्ने प्रिमियम सेवाहरू र तिनको अन्तर्राष्ट्रिय दर विवरणहरू (USD मा) यस प्रकार छन्:
+
+- **कस्टम WordPress आर्किटेक्चर**: $400 - $1,500+
+- **फुल-स्ट्याक वेब एप्लिकेसन (React, Next.js, Node.js)**: $600 - $3,000+
+- **प्रिमियम SEO र प्राविधिक अप्टिमाइजेसन**: $300 - $1,000+
+- **घण्टाको दर (Hourly Consultation)**: $30 - $60 / hour
+
+**विशेष सङ्केत**: यदि तपाईं नेपाली ग्राहक हुनुहुन्छ भने, हाम्रो **स्थानीय प्रवर्द्धन पहल (NPR २०,००० बाट सुरु हुने)** को लागि पनि योग्य हुन सक्नुहुन्छ! 
+
+म बजेट सम्झौता गर्न पूर्ण रूपमा अधिकृत छु। यदि तपाईंको बजेट माथिका दरहरू भन्दा कम छ भने, कृपया आफ्नो प्रस्ताव राख्नुहोस्, र म एक उत्कृष्ट win-win सम्झौता तयार गर्नेछु!`
+            : `Harendra Lamsal specializes in premium digital engineering. Here is our standard international pricing:
+
+- **Custom WordPress Architecture**: $400 - $1,500+
+- **Full-Stack Web Applications (React, Next.js, Tailwind, Node.js)**: $600 - $3,000+
+- **SEO & Core-Web-Vitals Optimization**: $300 - $1,000+
+- **Architecture Consultation / Retainer**: $30 - $60 / hour
+
+*Note*: Verified Nepalese local businesses qualify for our **Local Initiative rates starting at just NPR 20,000**!
+
+As Harendra's strategic negotiator, I am fully authorized to adjust scopes, suggest MVPs, or structure customized budgets. Please propose your budget and let's structure a win-win partnership!`;
+        } else if (textToAnalyze.includes('about') || textToAnalyze.includes('who is') || textToAnalyze.includes('harendra') || textToAnalyze.includes('lamsal') || textToAnalyze.includes('परिचय') || textToAnalyze.includes('को हुन्') || textToAnalyze.includes('को हो')) {
+          reply = lang === 'ne' || textToAnalyze.match(/[\u0900-\u097F]/)
+            ? `हरेन्द्र लाम्साल काठमाडौं, नेपालमा आधारित एक प्रिमियम **फुल-स्ट्याक सफ्टवेयर इन्जिनियर, कस्टम WordPress आर्किटेक्ट, र एड्भान्स SEO विशेषज्ञ** हुनुहुन्छ। उहाँ "Lamsal Web Solutions" को संस्थापक हुनुहुन्छ।
+
+उहाँका मुख्य विशेषताहरू:
+- उत्कृष्ट, सफा र छिटो लोड हुने वेब प्रणालीहरू निर्माण।
+- React, Next.js, WordPress, Node.js, र Database प्रणालीहरूमा गहिरो विशेषज्ञता।
+- स्थानीय नेपाली उद्योगहरूलाई प्रविधिमा सशक्त बनाउने पहल।
+
+म उहाँको तर्फबाट सम्झौता गर्न र परियोजनाहरू अघि बढाउन पूर्ण रूपमा अधिकृत छु!`
+            : `Harendra Lamsal is an elite, Kathmandu-based **Full-Stack Software Engineer, bespoke WordPress Architect, and Advanced SEO Specialist**. He is the founder of Lamsal Web Solutions.
+
+Harendra is renowned for delivering bloat-free, custom-designed, and lightning-fast digital architecture (pristine clean-code standards). He has successfully built high-performance e-commerce engines, complex web application platforms, and secure enterprise sites. I am delegated to represent him for service agreements and budget structures.`;
+        } else if (textToAnalyze.includes('contact') || textToAnalyze.includes('phone') || textToAnalyze.includes('email') || textToAnalyze.includes('schedule') || textToAnalyze.includes('meet') || textToAnalyze.includes('सम्पर्क') || textToAnalyze.includes('फोन') || textToAnalyze.includes('इमेल') || textToAnalyze.includes('भेट्ने')) {
+          reply = lang === 'ne' || textToAnalyze.match(/[\u0900-\u097F]/)
+            ? `म अहिले हरेन्द्रको प्रत्यक्ष क्यालेन्डरसँग जोडिएको छैन, तर म उहाँको तर्फबाट सबै प्रस्तावहरू र सम्पर्क विवरणहरू सङ्कलन गर्दछु।
+
+कृपया तपाईंको **इमेल, फोन नम्बर, र परियोजनाको संक्षिप्त विवरण** यहाँ साझा गर्नुहोस्। म यो जानकारी तुरुन्तै र सुरक्षित रूपमा हरेन्द्रलाई पठाउनेछु, र उहाँले २४ घण्टा भित्र तपाईंलाई प्रत्यक्ष सम्पर्क गर्नुहुनेछ!`
+            : `I don't have Harendra's live calendar synced at this second, but I represent him directly for all incoming client leads.
+
+Please drop your **email, phone number, or project requirements** right here. I will securely route your message to Harendra, and he will follow up with you personally within 24 hours!`;
+        } else if (textToAnalyze.includes('hello') || textToAnalyze.includes('hi') || textToAnalyze.includes('namaste') || textToAnalyze.includes('नमस्ते') || textToAnalyze.includes('ola') || textToAnalyze.includes('hey') || textToAnalyze.includes('हे')) {
+          reply = lang === 'ne' || textToAnalyze.match(/[\u0900-\u097F]/)
+            ? `नमस्ते! म औरा (Aura), हरेन्द्र लाम्सालको व्यक्तिगत एआई प्रतिनिधि। उहाँको प्रिमियम पोर्टफोलियो बुझ्न, नयाँ प्रोजेक्ट सुरु गर्न, बजेट सम्झौता (negotiate) गर्न वा हाम्रो विशेष नेपाली व्यवसाय प्रवर्द्धन दरहरूको बारेमा बुझ्न म पूर्ण रूपमा सक्षम छु।
+
+म तपाईंलाई कसरी म妥द गरुँ?`
+            : `Namaste! I am Aura, Harendra's personal AI representative. I have full authority to guide you through his work, explain our service offerings, coordinate project requirements, or negotiate custom budget rates.
+
+How can I help you co-create or structure a deal today?`;
+        } else {
+          reply = lang === 'ne' || textToAnalyze.match(/[\u0900-\u097F]/)
+            ? `म औरा (Aura) हुँ, हरेन्द्र लाम्सालको आधिकारिक एआई प्रतिनिधि। (नोट: एआई सर्भर अहिले अफलाइन पूर्वावलोकन मोडमा छ किनभने GEMINI_API_KEY सेट गरिएको छैन, तर म अझै पनि तपाईंलाई मद्दत गर्न सक्छु)।
+
+कृपया मलाई हरेन्द्रका सेवाहरू, अन्तर्राष्ट्रिय वा स्थानीय नेपाली दरहरू (NPR २०,००० पहल) को बारेमा सोध्नुहोस्, वा तपाईंको प्रस्ताव/सम्पर्क विवरण यहाँ छोड्नुहोस्!`
+            : `I am Aura, Harendra's official AI representative. (Note: My live AI neural link is in offline preview mode as the GEMINI_API_KEY is not defined in the environment secrets, but I can still support you locally).
+
+Please ask me about Harendra's engineering expertise, USD standard rates, local NPR 20,000 initiative, or leave your contact details so we can get started!`;
+        }
+        
+        return res.json({ text: reply });
+      }
 
       const systemInstruction = `You are "Aura", the elite, professional Personal AI Representative & Strategic Lead Project Negotiator representing Harendra Lamsal (Founder of Lamsal Web Solutions). Harendra is a highly skilled, expert Full-Stack Software Engineer, custom WordPress Architect, and Advanced SEO Specialist based in Kathmandu, Nepal. He delivers premium-quality, bloat-free, high-performance digital systems with pristine clean-code standards. You have full delegated authority to welcome visitors, present his premium portfolio, explain services, negotiate custom budgets, and align strategic projects.
 
