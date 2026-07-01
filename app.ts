@@ -19,10 +19,10 @@ import {
   insertMappedBlogPost,
   deleteSupabasePost,
   incrementSupabaseBlogView
-} from './server/supabase-service.js';
+} from './server/supabase-service.ts';
 
 // Import static dataset for XML sitemap fallback
-import { INITIAL_BLOG_POSTS, INITIAL_NEWS_ITEMS } from './src/data.js';
+import { INITIAL_BLOG_POSTS, INITIAL_NEWS_ITEMS } from './src/data.ts';
 
 // Lazy initialize Gemini client to prevent startup crash if key is missing
 let aiClient: GoogleGenAI | null = null;

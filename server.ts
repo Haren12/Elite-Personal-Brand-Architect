@@ -1,4 +1,4 @@
-import app from './app.js';
+import app from './app.ts';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import express from 'express';
