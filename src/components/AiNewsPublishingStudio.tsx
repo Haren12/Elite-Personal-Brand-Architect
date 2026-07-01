@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Sparkles,
@@ -105,6 +105,95 @@ We performed initial latency crawls across global edge endpoints:
   const [publishStatus, setPublishStatus] = useState<'draft' | 'published'>('published');
   const [author, setAuthor] = useState('Harendra Lamsal');
 
+  // --- Local Immediate States for ultra-responsive typing ---
+  const [localTitleEn, setLocalTitleEn] = useState(titleEn);
+  const [localExcerptEn, setLocalExcerptEn] = useState(excerptEn);
+  const [localContentEn, setLocalContentEn] = useState(contentEn);
+
+  const [localTitleNp, setLocalTitleNp] = useState(titleNp);
+  const [localExcerptNp, setLocalExcerptNp] = useState(excerptNp);
+  const [localContentNp, setLocalContentNp] = useState(contentNp);
+
+  // Sync local states if committed states change from outside (e.g., draft load, AI translation, SEO tag optimize)
+  useEffect(() => {
+    setLocalTitleEn(titleEn);
+  }, [titleEn]);
+
+  useEffect(() => {
+    setLocalExcerptEn(excerptEn);
+  }, [excerptEn]);
+
+  useEffect(() => {
+    setLocalContentEn(contentEn);
+  }, [contentEn]);
+
+  useEffect(() => {
+    setLocalTitleNp(titleNp);
+  }, [titleNp]);
+
+  useEffect(() => {
+    setLocalExcerptNp(excerptNp);
+  }, [excerptNp]);
+
+  useEffect(() => {
+    setLocalContentNp(contentNp);
+  }, [contentNp]);
+
+  // Debounced propagation from local inputs to committed state
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localTitleEn !== titleEn) {
+        setTitleEn(localTitleEn);
+      }
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [localTitleEn]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localExcerptEn !== excerptEn) {
+        setExcerptEn(localExcerptEn);
+      }
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [localExcerptEn]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localContentEn !== contentEn) {
+        setContentEn(localContentEn);
+      }
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [localContentEn]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localTitleNp !== titleNp) {
+        setTitleNp(localTitleNp);
+      }
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [localTitleNp]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localExcerptNp !== excerptNp) {
+        setExcerptNp(localExcerptNp);
+      }
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [localExcerptNp]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localContentNp !== contentNp) {
+        setContentNp(localContentNp);
+      }
+    }, 250);
+    return () => clearTimeout(handler);
+  }, [localContentNp]);
+
   // --- Dynamic Inline Media Insert States ---
   const [insertImageUrl, setInsertImageUrl] = useState('');
   const [insertImageAlt, setInsertImageAlt] = useState('');
@@ -135,27 +224,181 @@ We performed initial latency crawls across global edge endpoints:
   const editorRefEn = useRef<HTMLTextAreaElement>(null);
   const editorRefNp = useRef<HTMLTextAreaElement>(null);
 
-  // Dynamic values
+  // Derived counts (only recalculate when committed content changes)
   const wordCountEn = contentEn ? contentEn.trim().split(/\s+/).length : 0;
   const wordCountNp = contentNp ? contentNp.trim().split(/\s+/).length : 0;
   const readingTime = Math.max(1, Math.ceil(wordCountEn / 200));
 
-  // Auto-save timer
+  // Memoized High-Fidelity Portal Preview (prevents rebuild of markdown rendering on every single keystroke)
+  const previewBlock = useMemo(() => {
+    const previewContent = activeTab === 'en' ? contentEn : contentNp;
+    const previewTitle = activeTab === 'en' ? titleEn : titleNp;
+    const previewExcerpt = activeTab === 'en' ? excerptEn : excerptNp;
+
+    return (
+      <article className="border border-slate-900 bg-slate-900/20 rounded-2xl overflow-hidden shadow-xl p-5 text-left space-y-4">
+        {/* Category, tags, badges */}
+        <div className="flex flex-wrap items-center gap-2">
+          {isBreaking && (
+            <span className="bg-rose-600 text-white font-black text-[10px] px-2 py-0.5 rounded tracking-widest uppercase animate-pulse">
+              BREAKING
+            </span>
+          )}
+          {isTrending && (
+            <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px] px-2 py-0.5 rounded uppercase">
+              TRENDING
+            </span>
+          )}
+          <span className="text-xs font-mono font-bold text-rose-400 uppercase">
+            {category}
+          </span>
+        </div>
+
+        {/* Title / Headline */}
+        <h2 className="text-xl font-bold text-white leading-tight font-sans" style={{ fontFamily: '"Space Grotesk", sans-serif' }}>
+          {activeTab === 'en' ? (previewTitle || 'Untitled Headline') : (previewTitle || 'शीर्षक विहिन')}
+        </h2>
+
+        {/* Excerpt */}
+        <p className="text-xs text-slate-400 leading-relaxed border-l-2 border-rose-500 pl-3 italic">
+          {activeTab === 'en' ? (previewExcerpt || 'No teaser provided.') : (previewExcerpt || 'विवरण उपलब्ध छैन।')}
+        </p>
+
+        {/* Profile photo/Featured Image */}
+        {featuredImage && (
+          <div className="relative rounded-xl overflow-hidden border border-slate-850">
+            <img
+              src={featuredImage}
+              alt="Featured portal view"
+              className="w-full h-48 object-cover"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute bottom-2 right-2 bg-black/75 px-2 py-1 rounded text-[9px] text-slate-300 font-mono">
+              {author} • {new Date().toLocaleDateString()}
+            </div>
+          </div>
+        )}
+
+        {/* Simulated markdown rendering */}
+        <div className="space-y-4 text-xs text-slate-300 leading-relaxed font-sans pt-2">
+          {previewContent.split('\n\n').map((block, bIdx) => {
+            if (block.startsWith('## ')) {
+              return (
+                <h3 key={bIdx} className="text-sm font-bold text-white border-b border-slate-900 pb-1 pt-2 uppercase font-sans">
+                  {block.replace('## ', '')}
+                </h3>
+              );
+            }
+            if (block.startsWith('> ')) {
+              return (
+                <blockquote key={bIdx} className="border-l-4 border-amber-400/80 bg-slate-900/40 p-3 rounded text-xs italic text-slate-200">
+                  {block.replace(/>\s*/g, '')}
+                </blockquote>
+              );
+            }
+            // Check for inline image code ![]()
+            const imgMatch = block.match(/!\[(.*?)\]\((.*?)\)/);
+            if (imgMatch) {
+              const alt = imgMatch[1];
+              const url = imgMatch[2];
+              return (
+                <div key={bIdx} className="my-3 space-y-1">
+                  <img
+                    src={url}
+                    alt={alt}
+                    className="rounded-lg border border-slate-850 max-h-48 w-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="text-[10px] text-slate-500 italic text-center">
+                    {alt || 'Inserted Article Media'}
+                  </div>
+                </div>
+              );
+            }
+            // Render text with links
+            let text = block;
+            const linkMatches = [...text.matchAll(/\[(.*?)\]\((.*?)\)/g)];
+            if (linkMatches.length > 0) {
+              return (
+                <p key={bIdx} className="leading-relaxed">
+                  {text.split(/\[.*?\]\(.*?\)/).map((segment, sIdx) => {
+                    const match = linkMatches[sIdx];
+                    return (
+                      <React.Fragment key={sIdx}>
+                        {segment}
+                        {match && (
+                          <a
+                            href={match[2]}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center space-x-0.5 text-rose-400 hover:text-rose-300 underline font-semibold decoration-rose-500/50"
+                          >
+                            <span>{match[1]}</span>
+                            <ExternalLink size={10} />
+                          </a>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </p>
+              );
+            }
+
+            return <p key={bIdx} className="leading-relaxed">{block}</p>;
+          })}
+        </div>
+      </article>
+    );
+  }, [
+    activeTab,
+    contentEn,
+    contentNp,
+    titleEn,
+    titleNp,
+    excerptEn,
+    excerptNp,
+    featuredImage,
+    isBreaking,
+    isTrending,
+    category,
+    author
+  ]);
+
+  // Refs to hold the freshest values for background tasks like autosave
+  const autosaveDataRef = useRef({
+    titleEn, excerptEn, contentEn,
+    titleNp, excerptNp, contentNp,
+    category, tags, featuredImage, isBreaking, isTrending, isFeatured
+  });
+
+  // Keep ref in sync without triggering re-renders
   useEffect(() => {
+    autosaveDataRef.current = {
+      titleEn, excerptEn, contentEn,
+      titleNp, excerptNp, contentNp,
+      category, tags, featuredImage, isBreaking, isTrending, isFeatured
+    };
+  }, [titleEn, excerptEn, contentEn, titleNp, excerptNp, contentNp, category, tags, featuredImage, isBreaking, isTrending, isFeatured]);
+
+  // Stable Auto-save interval (runs independent of keypress re-renders)
+  useEffect(() => {
+    let lastSavedString = '';
     const interval = setInterval(() => {
-      setSaveIndicator('saving');
-      setTimeout(() => {
-        setLastSaved(new Date().toLocaleTimeString());
-        setSaveIndicator('saved');
-        localStorage.setItem('news_studio_draft', JSON.stringify({
-          titleEn, excerptEn, contentEn,
-          titleNp, excerptNp, contentNp,
-          category, tags, featuredImage, isBreaking, isTrending, isFeatured
-        }));
-      }, 700);
+      const dataToSave = autosaveDataRef.current;
+      const currentString = JSON.stringify(dataToSave);
+      
+      if (currentString !== lastSavedString) {
+        setSaveIndicator('saving');
+        setTimeout(() => {
+          setLastSaved(new Date().toLocaleTimeString());
+          setSaveIndicator('saved');
+          localStorage.setItem('news_studio_draft', currentString);
+          lastSavedString = currentString;
+        }, 700);
+      }
     }, 12000);
     return () => clearInterval(interval);
-  }, [titleEn, excerptEn, contentEn, titleNp, excerptNp, contentNp, category, tags, featuredImage, isBreaking, isTrending, isFeatured]);
+  }, []);
 
   // Load draft on mount
   useEffect(() => {
@@ -163,12 +406,12 @@ We performed initial latency crawls across global edge endpoints:
     if (saved) {
       try {
         const d = JSON.parse(saved);
-        if (d.titleEn) setTitleEn(d.titleEn);
-        if (d.excerptEn) setExcerptEn(d.excerptEn);
-        if (d.contentEn) setContentEn(d.contentEn);
-        if (d.titleNp) setTitleNp(d.titleNp);
-        if (d.excerptNp) setExcerptNp(d.excerptNp);
-        if (d.contentNp) setContentNp(d.contentNp);
+        if (d.titleEn) { setTitleEn(d.titleEn); setLocalTitleEn(d.titleEn); }
+        if (d.excerptEn) { setExcerptEn(d.excerptEn); setLocalExcerptEn(d.excerptEn); }
+        if (d.contentEn) { setContentEn(d.contentEn); setLocalContentEn(d.contentEn); }
+        if (d.titleNp) { setTitleNp(d.titleNp); setLocalTitleNp(d.titleNp); }
+        if (d.excerptNp) { setExcerptNp(d.excerptNp); setLocalExcerptNp(d.excerptNp); }
+        if (d.contentNp) { setContentNp(d.contentNp); setLocalContentNp(d.contentNp); }
         if (d.category) setCategory(d.category);
         if (d.tags) setTags(d.tags);
         if (d.featuredImage) setFeaturedImage(d.featuredImage);
@@ -181,9 +424,13 @@ We performed initial latency crawls across global edge endpoints:
     }
   }, []);
 
-  // AI Translation proxy trigger
+  // AI Translation proxy trigger (using latest local inputs)
   const runAiTranslate = async () => {
-    if (!contentEn || !titleEn) {
+    const currentTitleEn = localTitleEn;
+    const currentContentEn = localContentEn;
+    const currentExcerptEn = localExcerptEn;
+
+    if (!currentContentEn || !currentTitleEn) {
       alert('Please fill in the English Headline and Body first.');
       return;
     }
@@ -194,23 +441,39 @@ We performed initial latency crawls across global edge endpoints:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: titleEn,
-          excerpt: excerptEn,
-          content: contentEn,
+          title: currentTitleEn,
+          excerpt: currentExcerptEn,
+          content: currentContentEn,
         }),
       });
       if (!res.ok) throw new Error('API router response failed');
       const data = await res.json();
-      setTitleNp(data.translatedTitle || '');
-      setExcerptNp(data.translatedExcerpt || '');
-      setContentNp(data.translatedContent || '');
+      const updatedTitle = data.translatedTitle || '';
+      const updatedExcerpt = data.translatedExcerpt || '';
+      const updatedContent = data.translatedContent || '';
+
+      setTitleNp(updatedTitle);
+      setLocalTitleNp(updatedTitle);
+      setExcerptNp(updatedExcerpt);
+      setLocalExcerptNp(updatedExcerpt);
+      setContentNp(updatedContent);
+      setLocalContentNp(updatedContent);
+
       setNotification('Success: Translated with natural colloquial flow via Gemini AI!');
     } catch (err) {
       console.error(err);
       // Fallback
-      setTitleNp(`${titleEn} (नेपाली अनुवाद)`);
-      setExcerptNp(`${excerptEn} (अनुवाद विवरण)`);
-      setContentNp(`### ${titleEn} (नेपाली विवरण)\n\nयो नेपालीमा स्वचालित रूपमा तयार गरिएको अनुवाद हो।\n\n${contentEn}`);
+      const fallbackTitle = `${currentTitleEn} (नेपाली अनुवाद)`;
+      const fallbackExcerpt = `${currentExcerptEn} (अनुवाद विवरण)`;
+      const fallbackContent = `### ${currentTitleEn} (नेपाली विवरण)\n\nयो नेपालीमा स्वचालित रूपमा तयार गरिएको अनुवाद हो।\n\n${currentContentEn}`;
+
+      setTitleNp(fallbackTitle);
+      setLocalTitleNp(fallbackTitle);
+      setExcerptNp(fallbackExcerpt);
+      setLocalExcerptNp(fallbackExcerpt);
+      setContentNp(fallbackContent);
+      setLocalContentNp(fallbackContent);
+
       setNotification('Fallback: Local translator applied.');
     } finally {
       setAiTranslating(false);
@@ -218,9 +481,10 @@ We performed initial latency crawls across global edge endpoints:
     }
   };
 
-  // AI SEO Optimizer for News metadata
+  // AI SEO Optimizer for News metadata (using latest local inputs)
   const runAiSeoOptimize = async () => {
-    if (!titleEn) {
+    const currentTitleEn = localTitleEn;
+    if (!currentTitleEn) {
       alert('Please enter a Headline first.');
       return;
     }
@@ -230,11 +494,15 @@ We performed initial latency crawls across global edge endpoints:
       const res = await fetch('/api/gemini/seo-optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: titleEn }),
+        body: JSON.stringify({ title: currentTitleEn }),
       });
       if (!res.ok) throw new Error('SEO endpoint failed');
       const data = await res.json();
-      setExcerptEn(data.metaDescription || excerptEn);
+      
+      const desc = data.metaDescription || localExcerptEn;
+      setExcerptEn(desc);
+      setLocalExcerptEn(desc);
+
       if (data.tags) {
         const newTags = data.tags.split(',').map((t: string) => t.trim());
         setTags([...new Set([...tags, ...newTags])]);
@@ -289,7 +557,7 @@ We performed initial latency crawls across global edge endpoints:
   // Helper to insert markdown content at current cursor position
   const insertTextAtCursor = (textToInsert: string, target: 'en' | 'ne') => {
     const textarea = target === 'en' ? editorRefEn.current : editorRefNp.current;
-    const currentVal = target === 'en' ? contentEn : contentNp;
+    const currentVal = target === 'en' ? localContentEn : localContentNp;
     
     if (textarea) {
       const start = textarea.selectionStart;
@@ -297,8 +565,10 @@ We performed initial latency crawls across global edge endpoints:
       const updatedVal = currentVal.substring(0, start) + textToInsert + currentVal.substring(end);
       
       if (target === 'en') {
+        setLocalContentEn(updatedVal);
         setContentEn(updatedVal);
       } else {
+        setLocalContentNp(updatedVal);
         setContentNp(updatedVal);
       }
       
@@ -309,8 +579,10 @@ We performed initial latency crawls across global edge endpoints:
     } else {
       // Fallback append
       if (target === 'en') {
+        setLocalContentEn(prev => prev + '\n' + textToInsert);
         setContentEn(prev => prev + '\n' + textToInsert);
       } else {
+        setLocalContentNp(prev => prev + '\n' + textToInsert);
         setContentNp(prev => prev + '\n' + textToInsert);
       }
     }
@@ -355,25 +627,32 @@ We performed initial latency crawls across global edge endpoints:
 
   // Handle Publish Submit
   const handlePublishSync = () => {
-    if (!titleEn || !contentEn) {
+    const currentTitleEn = localTitleEn;
+    const currentContentEn = localContentEn;
+    const currentExcerptEn = localExcerptEn;
+    const currentTitleNp = localTitleNp;
+    const currentExcerptNp = localExcerptNp;
+    const currentContentNp = localContentNp;
+
+    if (!currentTitleEn || !currentContentEn) {
       alert('Headline and news content body are required in English source.');
       return;
     }
 
-    const finalSlug = titleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const finalSlug = currentTitleEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const finalItem: NewsItem = {
       id: newsId,
       slug: finalSlug,
       translations: {
         en: {
-          title: titleEn,
-          excerpt: excerptEn || 'High-fidelity live tech news.',
-          content: contentEn,
+          title: currentTitleEn,
+          excerpt: currentExcerptEn || 'High-fidelity live tech news.',
+          content: currentContentEn,
         },
         ne: {
-          title: titleNp || `${titleEn} (नेपाली विवरण)`,
-          excerpt: excerptNp || 'नेपाली संस्करण लेख विवरण।',
-          content: contentNp || contentEn,
+          title: currentTitleNp || `${currentTitleEn} (नेपाली विवरण)`,
+          excerpt: currentExcerptNp || 'नेपाली संस्करण लेख विवरण।',
+          content: currentContentNp || currentContentEn,
         }
       },
       featuredImage: featuredImage || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=80',
@@ -402,6 +681,12 @@ We performed initial latency crawls across global edge endpoints:
     setTitleNp('');
     setExcerptNp('');
     setContentNp('');
+    setLocalTitleEn('');
+    setLocalExcerptEn('');
+    setLocalContentEn('');
+    setLocalTitleNp('');
+    setLocalExcerptNp('');
+    setLocalContentNp('');
     setTags(['AI', 'Tech']);
   };
 
@@ -792,15 +1077,15 @@ We performed initial latency crawls across global edge endpoints:
                     <div className="text-xs font-bold text-rose-400 font-mono">1. ENGLISH SOURCE NEWS</div>
                     <input
                       type="text"
-                      value={titleEn}
-                      onChange={(e) => setTitleEn(e.target.value)}
+                      value={localTitleEn}
+                      onChange={(e) => setLocalTitleEn(e.target.value)}
                       placeholder="Headline (English)..."
                       className="w-full bg-transparent border-b border-slate-900 py-1.5 font-bold text-base text-white focus:border-rose-500 focus:outline-none"
                     />
                     <textarea
                       ref={editorRefEn}
-                      value={contentEn}
-                      onChange={(e) => setContentEn(e.target.value)}
+                      value={localContentEn}
+                      onChange={(e) => setLocalContentEn(e.target.value)}
                       rows={8}
                       placeholder="Report content (Supports inline images & links markdown)..."
                       className="w-full bg-slate-900/30 border border-slate-850 rounded p-2.5 text-xs text-slate-200 font-mono focus:border-rose-500 focus:outline-none leading-relaxed"
@@ -812,15 +1097,15 @@ We performed initial latency crawls across global edge endpoints:
                     <div className="text-xs font-bold text-emerald-400 font-mono">2. नेपाली संस्करण (NEPALI LOCALIZATION)</div>
                     <input
                       type="text"
-                      value={titleNp}
-                      onChange={(e) => setTitleNp(e.target.value)}
+                      value={localTitleNp}
+                      onChange={(e) => setLocalTitleNp(e.target.value)}
                       placeholder="मुख्य समाचार शीर्षक (नेपाली)..."
                       className="w-full bg-transparent border-b border-slate-900 py-1.5 font-bold text-base text-white focus:border-rose-500 focus:outline-none"
                     />
                     <textarea
                       ref={editorRefNp}
-                      value={contentNp}
-                      onChange={(e) => setContentNp(e.target.value)}
+                      value={localContentNp}
+                      onChange={(e) => setLocalContentNp(e.target.value)}
                       rows={8}
                       placeholder="समाचार विवरण (मार्काडाउन र लिङ्कहरू समर्थित)..."
                       className="w-full bg-slate-900/30 border border-slate-850 rounded p-2.5 text-xs text-slate-200 font-mono focus:border-rose-500 focus:outline-none leading-relaxed"
@@ -841,15 +1126,15 @@ We performed initial latency crawls across global edge endpoints:
 
                   <input
                     type="text"
-                    value={activeTab === 'en' ? titleEn : titleNp}
-                    onChange={(e) => activeTab === 'en' ? setTitleEn(e.target.value) : setTitleNp(e.target.value)}
+                    value={activeTab === 'en' ? localTitleEn : localTitleNp}
+                    onChange={(e) => activeTab === 'en' ? setLocalTitleEn(e.target.value) : setLocalTitleNp(e.target.value)}
                     placeholder={activeTab === 'en' ? "Enter English News Headline..." : "नेपाली समाचार मुख्य शीर्षक लेख्नुहोस्..."}
                     className="w-full bg-transparent border-b border-slate-900 focus:border-rose-500 py-2.5 text-xl font-bold text-white focus:outline-none"
                   />
 
                   <textarea
-                    value={activeTab === 'en' ? excerptEn : excerptNp}
-                    onChange={(e) => activeTab === 'en' ? setExcerptEn(e.target.value) : setExcerptNp(e.target.value)}
+                    value={activeTab === 'en' ? localExcerptEn : localExcerptNp}
+                    onChange={(e) => activeTab === 'en' ? setLocalExcerptEn(e.target.value) : setLocalExcerptNp(e.target.value)}
                     placeholder="Short summary/excerpt for portal ticker lists..."
                     rows={2}
                     className="w-full bg-slate-900/30 border border-slate-900 rounded-lg p-2.5 text-xs text-slate-300 focus:outline-none focus:border-rose-500 font-sans"
@@ -857,8 +1142,8 @@ We performed initial latency crawls across global edge endpoints:
 
                   <textarea
                     ref={activeTab === 'en' ? editorRefEn : editorRefNp}
-                    value={activeTab === 'en' ? contentEn : contentNp}
-                    onChange={(e) => activeTab === 'en' ? setContentEn(e.target.value) : setContentNp(e.target.value)}
+                    value={activeTab === 'en' ? localContentEn : localContentNp}
+                    onChange={(e) => activeTab === 'en' ? setLocalContentEn(e.target.value) : setLocalContentNp(e.target.value)}
                     placeholder="Draft news report content here. Use the Catchy Boosters on the left sidebar to insert related live photos and hyperlinks..."
                     className="w-full flex-1 min-h-[350px] bg-slate-900/10 border border-slate-900 rounded-xl p-4 text-sm text-slate-200 font-mono focus:outline-none focus:border-rose-500 leading-relaxed resize-none"
                   />
@@ -874,120 +1159,8 @@ We performed initial latency crawls across global edge endpoints:
                   <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 px-2 py-0.5 rounded">High Fidelity</span>
                 </div>
 
-                {/* Simulated Portal Article Block */}
-                <article className="border border-slate-900 bg-slate-900/20 rounded-2xl overflow-hidden shadow-xl p-5 text-left space-y-4">
-                  {/* Category, tags, badges */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    {isBreaking && (
-                      <span className="bg-rose-600 text-white font-black text-[10px] px-2 py-0.5 rounded tracking-widest uppercase animate-pulse">
-                        BREAKING
-                      </span>
-                    )}
-                    {isTrending && (
-                      <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px] px-2 py-0.5 rounded uppercase">
-                        TRENDING
-                      </span>
-                    )}
-                    <span className="text-xs font-mono font-bold text-rose-400 uppercase">
-                      {category}
-                    </span>
-                  </div>
-
-                  {/* Title / Headline */}
-                  <h2 className="text-xl font-bold text-white leading-tight font-sans" style={{ fontFamily: '"Space Grotesk", sans-serif' }}>
-                    {activeTab === 'en' ? (titleEn || 'Untitled Headline') : (titleNp || 'शीर्षक विहिन')}
-                  </h2>
-
-                  {/* Excerpt */}
-                  <p className="text-xs text-slate-400 leading-relaxed border-l-2 border-rose-500 pl-3 italic">
-                    {activeTab === 'en' ? (excerptEn || 'No teaser provided.') : (excerptNp || 'विवरण उपलब्ध छैन।')}
-                  </p>
-
-                  {/* Profile photo/Featured Image */}
-                  {featuredImage && (
-                    <div className="relative rounded-xl overflow-hidden border border-slate-850">
-                      <img
-                        src={featuredImage}
-                        alt="Featured portal view"
-                        className="w-full h-48 object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="absolute bottom-2 right-2 bg-black/75 px-2 py-1 rounded text-[9px] text-slate-300 font-mono">
-                        {author} • {new Date().toLocaleDateString()}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Simulated markdown rendering */}
-                  <div className="space-y-4 text-xs text-slate-300 leading-relaxed font-sans pt-2">
-                    {/* Render a simulated formatted text rendering paragraphs, quotes, images */}
-                    {(activeTab === 'en' ? contentEn : contentNp).split('\n\n').map((block, bIdx) => {
-                      if (block.startsWith('## ')) {
-                        return (
-                          <h3 key={bIdx} className="text-sm font-bold text-white border-b border-slate-900 pb-1 pt-2 uppercase font-sans">
-                            {block.replace('## ', '')}
-                          </h3>
-                        );
-                      }
-                      if (block.startsWith('> ')) {
-                        return (
-                          <blockquote key={bIdx} className="border-l-4 border-amber-400/80 bg-slate-900/40 p-3 rounded text-xs italic text-slate-200">
-                            {block.replace(/>\s*/g, '')}
-                          </blockquote>
-                        );
-                      }
-                      // Check for inline image code ![]()
-                      const imgMatch = block.match(/!\[(.*?)\]\((.*?)\)/);
-                      if (imgMatch) {
-                        const alt = imgMatch[1];
-                        const url = imgMatch[2];
-                        return (
-                          <div key={bIdx} className="my-3 space-y-1">
-                            <img
-                              src={url}
-                              alt={alt}
-                              className="rounded-lg border border-slate-850 max-h-48 w-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                            <div className="text-[10px] text-slate-500 italic text-center">
-                              {alt || 'Inserted Article Media'}
-                            </div>
-                          </div>
-                        );
-                      }
-                      // Render text with links
-                      let text = block;
-                      const linkMatches = [...text.matchAll(/\[(.*?)\]\((.*?)\)/g)];
-                      if (linkMatches.length > 0) {
-                        return (
-                          <p key={bIdx} className="leading-relaxed">
-                            {text.split(/\[.*?\]\(.*?\)/).map((segment, sIdx) => {
-                              const match = linkMatches[sIdx];
-                              return (
-                                <React.Fragment key={sIdx}>
-                                  {segment}
-                                  {match && (
-                                    <a
-                                      href={match[2]}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="inline-flex items-center space-x-0.5 text-rose-400 hover:text-rose-300 underline font-semibold decoration-rose-500/50"
-                                    >
-                                      <span>{match[1]}</span>
-                                      <ExternalLink size={10} />
-                                    </a>
-                                  )}
-                                </React.Fragment>
-                              );
-                            })}
-                          </p>
-                        );
-                      }
-
-                      return <p key={bIdx} className="leading-relaxed">{block}</p>;
-                    })}
-                  </div>
-                </article>
+                {/* Render the pre-calculated, debounced high fidelity preview */}
+                {previewBlock}
               </div>
             )}
 
