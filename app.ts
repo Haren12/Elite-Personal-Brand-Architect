@@ -101,12 +101,20 @@ async function generateContentWithFallback(
 }
 
 const NEWS_FILE_PATH = path.join(process.cwd(), 'news_data.json');
+const isVercelRuntime = Boolean(process.env.VERCEL);
+let inMemoryNewsData = INITIAL_NEWS_ITEMS;
 
 function getNewsData() {
+  if (isVercelRuntime) {
+    return inMemoryNewsData;
+  }
+
   try {
     if (fs.existsSync(NEWS_FILE_PATH)) {
       const content = fs.readFileSync(NEWS_FILE_PATH, 'utf-8');
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+      inMemoryNewsData = parsed;
+      return parsed;
     }
   } catch (err) {
     console.error('[News File Read Error]:', err);
@@ -118,10 +126,19 @@ function getNewsData() {
   } catch (err) {
     console.error('[News File Write Init Error]:', err);
   }
+  inMemoryNewsData = INITIAL_NEWS_ITEMS;
   return INITIAL_NEWS_ITEMS;
 }
 
 function saveNewsData(data: any) {
+  inMemoryNewsData = data;
+
+  if (isVercelRuntime) {
+    // Vercel serverless environments are read-only between invocations.
+    // Keep the latest news in memory for the current runtime and rely on Supabase for persistence when configured.
+    return true;
+  }
+
   try {
     fs.writeFileSync(NEWS_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
     return true;
