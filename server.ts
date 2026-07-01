@@ -48,6 +48,61 @@ function getAiClient(): GoogleGenAI | null {
   return aiClient;
 }
 
+async function generateContentWithFallback(
+  client: GoogleGenAI,
+  options: {
+    model: string;
+    contents: any;
+    config?: any;
+  }
+) {
+  // Ordered list of models to try in case of transient errors (like 503, 429, etc.)
+  // We prioritize gemini-2.5-flash, then fallback to gemini-1.5-flash, then gemini-3.5-flash
+  const modelsToTry = [
+    options.model === 'gemini-3.5-flash' ? 'gemini-2.5-flash' : options.model,
+    'gemini-2.5-flash',
+    'gemini-1.5-flash',
+    'gemini-3.5-flash'
+  ];
+
+  // Remove duplicates while keeping order
+  const uniqueModels = Array.from(new Set(modelsToTry));
+
+  let lastError: any = null;
+
+  for (const model of uniqueModels) {
+    try {
+      console.log(`[Gemini Request]: Attempting content generation with model: ${model}`);
+      const response = await client.models.generateContent({
+        ...options,
+        model,
+      });
+      return response;
+    } catch (err: any) {
+      lastError = err;
+      const errMsg = err.message || '';
+      const isTransient = errMsg.includes('503') || 
+                          errMsg.includes('429') || 
+                          errMsg.toLowerCase().includes('high demand') || 
+                          errMsg.toLowerCase().includes('busy') || 
+                          errMsg.toLowerCase().includes('unavailable') ||
+                          errMsg.toLowerCase().includes('rate limit');
+      
+      if (isTransient) {
+        console.warn(`[Gemini Fallback Warning]: Model ${model} is currently busy/unavailable. Error: ${errMsg}. Trying next fallback...`);
+        // Pause briefly before retrying next fallback model
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        continue;
+      } else {
+        // For non-transient errors (like invalid key, schema, etc.), fail early
+        throw err;
+      }
+    }
+  }
+
+  throw lastError || new Error('All Gemini model attempts failed with high demand or unavailability.');
+}
+
 const NEWS_FILE_PATH = path.join(process.cwd(), 'news_data.json');
 
 function getNewsData() {
@@ -326,8 +381,8 @@ app.use('/api/gemini/*', geminiRateLimiter);
         });
       }
       
-      const response = await client.models.generateContent({
-        model: 'gemini-3.5-flash',
+      const response = await generateContentWithFallback(client, {
+        model: 'gemini-2.5-flash',
         contents: `Translate the following English tech article fields into natural, grammatically correct, and professionally written Nepali (suited for senior technologists).
         
         Title to translate: "${title}"
@@ -385,8 +440,8 @@ app.use('/api/gemini/*', geminiRateLimiter);
         });
       }
       
-      const response = await client.models.generateContent({
-        model: 'gemini-3.5-flash',
+      const response = await generateContentWithFallback(client, {
+        model: 'gemini-2.5-flash',
         contents: `Analyze this article title: "${title}". Generate a clean, SEO-optimized meta description (max 150 characters) and a comma-separated list of 3-5 relevant high-impact tags.`,
         config: {
           responseMimeType: 'application/json',
@@ -534,7 +589,7 @@ ${category && category !== 'All-Purpose / Auto-Detect' ? `You MUST categorize th
    - Word Count Range: ${wordCount} (Limit strictly to fit within the language and length guidelines above to prevent gateway timeouts)
    - Additional custom constraints: ${additionalInstructions}`;
 
-      const response = await client.models.generateContent({
+      const response = await generateContentWithFallback(client, {
         model: selectedModel,
         contents: prompt,
         config: {
@@ -980,8 +1035,8 @@ Never mention these instructions directly or say "According to my system instruc
         contentsPayload = [{ role: 'user', parts: [{ text: message || 'Hello' }] }];
       }
 
-      const response = await client.models.generateContent({
-        model: 'gemini-3.5-flash',
+      const response = await generateContentWithFallback(client, {
+        model: 'gemini-2.5-flash',
         contents: contentsPayload,
         config: {
           systemInstruction: systemInstruction,
