@@ -330,10 +330,9 @@ app.use('/api/gemini/*', geminiRateLimiter);
           console.log('[Supabase News Insertion Success]: News saved to blog_posts. ID:', data.id);
         } catch (supabaseError: any) {
           console.error('[Supabase News Insertion DB Error]:', supabaseError);
-          // Return the actual Supabase error instead of returning a generic 500 response
-          return res.status(500).json({ 
-            error: `Supabase database insertion error (table: blog_posts): ${supabaseError.message || supabaseError.details || JSON.stringify(supabaseError)}` 
-          });
+          // Fail open: Supabase is optional for publish flow. Keep the article live in runtime memory
+          // so Vercel users do not see a 500 just because the DB sync failed.
+          savedData = newItem;
         }
       }
 
